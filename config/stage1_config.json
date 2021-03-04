@@ -1,0 +1,40 @@
+{
+    "DL1Writer": {
+        "overwrite": true,
+        "write_images": true,
+        "write_parameters": true
+    },
+    "LSTEventSource": {
+      "LSTR0Corrections": {
+        "drs4_pedestal_path": "/home/jonas/aktuell/workb/dvr_test/data/crab/calibrations/drs4_pedestal.Run2920.0000.fits",
+        "drs4_time_calibration_path": "/home/jonas/aktuell/workb/dvr_test/data/crab/calibrations/time_calibration.Run2921.0000.hdf5",
+        "calibration_path": "/home/jonas/aktuell/workb/dvr_test/data/crab/calibrations/calibration.Run2921.0000.hdf5"
+      },
+      "PointingSource": {
+        "drive_report_path": "/home/jonas/aktuell/workb/dvr_test/data/crab/calibrations/drive_log_20_11_18.txt"
+      }
+    },
+    "CameraCalibrator": {
+        "image_extractor_type": "LocalPeakWindowSum",
+        "LocalPeakWindowSum": {
+            "window_shift": 4,
+            "window_width": 8,
+            "apply_integration_correction": false
+        }
+    },
+    "ImageProcessor": {
+        "image_cleaner_type": "TailcutsImageCleaner",
+        "TailcutsImageCleaner": {
+            "picture_threshold_pe": 10,
+            "boundary_threshold_pe": 5,
+            "keep_isolated_pixels": false,
+            "min_picture_neighbors": 1
+        },
+        "ImageQualityQuery": {
+            "quality_criteria": [
+                ["enough_pixels", "lambda im: np.count_nonzero(im) > 2"],
+                ["enough_charge", "lambda im: im.sum() > 50"]
+            ]
+        }
+    }
+}

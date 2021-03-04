@@ -1,9 +1,0 @@
-# random seed
-seed: 0
-
-# this should be a list of column_name: [operator, value]
-# all cuts are combined with logical AND
-selection:
-  - intensity: [">", 150]
-  - leakage_intensity_width_1: ["<", 0.2]
-  - leakage_intensity_width_2: ["<", 0.2]

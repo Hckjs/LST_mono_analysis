@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from fact.io import read_h5py
+
 from pyirf.cuts import evaluate_binned_cut
 
 from astropy.time import Time
@@ -18,58 +18,45 @@ erfa_astrom.set(ErfaAstromInterpolator(10 * u.min))
 
 
 def calc_ontime(df):
-    delta = np.diff(df.dragon_time.sort_values())
+    delta = np.diff(df.time.sort_values())
     delta = delta[np.abs(delta) < 10]
     return len(df) * delta.mean() * u.s
 
 
 def calc_theta_off(source_coord: SkyCoord, reco_coord: SkyCoord, pointing_coord: SkyCoord, n_off=5):
-    fov_frame = SkyOffsetFrame(origin=pointing_coord)
-    source_fov = source_coord.transform_to(fov_frame)
-    reco_fov = reco_coord.transform_to(fov_frame)
-    
-    r = source_coord.separation(pointing_coord)
-    phi0 = np.arctan2(source_fov.lat, source_fov.lon).to_value(u.rad)
-    
+    wobble_dist = source_coord.separation(pointing_coord)
+    source_angle = pointing_coord.position_angle(source_coord)
+
     theta_offs = []
-    for off in range(1, n_off + 1):
-        
-        off_pos = SkyCoord(
-            lon=r * np.cos(phi0 + 2 * np.pi * off / (n_off + 1)),
-            lat=r * np.sin(phi0 + 2 * np.pi * off / (n_off + 1)),
-            frame=fov_frame,
+    for off in (np.arange(360 / (n_off + 1), 360, 360 / (n_off + 1)) * u.deg):
+        off_position = pointing_coord.directional_offset_by(
+            separation=wobble_dist,
+            position_angle=source_angle + off
         )
-        
-        theta_offs.append(off_pos.separation(reco_fov))
-        
+        theta_offs.append(off_position.separation(reco_coord))
+
     return reco_coord.separation(source_coord), np.concatenate(theta_offs)
 
 
-def read_run_calculate_thetas(run, columns, threshold, source: SkyCoord, n_offs):
+def read_run_calculate_thetas(run, threshold, source: SkyCoord, n_offs):
 
-    df = read_h5py(run, key = 'events', columns=columns)
+    df = pd.read_hdf(run, key = '/dl2/event/telescope/tel_001/table')
 
     ontime = calc_ontime(df).to(u.hour)
 
     if type(threshold) == float:
-        df_selected = df.query(f'gammaness > {threshold}')
+        df_selected = df.query(f'gamma_prediction > {threshold}')
     else:
         df['selected_gh'] = evaluate_binned_cut(
-            df.gammaness.to_numpy(), df.gamma_energy_prediction.to_numpy() * u.TeV, threshold, operator.ge
+            df.gamma_prediction.to_numpy(), df.gamma_energy_prediction.to_numpy() * u.TeV, threshold, operator.ge
         )
         df_selected = df.query('selected_gh')
 
-    location = EarthLocation.from_geodetic(-17.89139 * u.deg, 28.76139 * u.deg, 2184 * u.m)
-    obstime = Time(df_selected.dragon_time, format='unix')
-
-    altaz = AltAz(obstime=obstime, location=location)
-
-    pointing = SkyCoord(
-        alt=u.Quantity(df_selected.alt_tel.values, u.rad, copy=False),
-        az=u.Quantity(df_selected.az_tel.values, u.rad, copy=False),
-        frame=altaz,
+    pointing_icrs = SkyCoord(
+        df_selected.pointing_ra.values * u.rad,
+        df_selected.pointing_dec.values * u.rad,
+        frame='icrs'
     )
-    pointing_icrs = pointing.transform_to('icrs')
 
     prediction_icrs = SkyCoord(
         df_selected.source_ra_prediction.values * u.rad, 
