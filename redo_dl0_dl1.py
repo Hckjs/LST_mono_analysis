@@ -153,7 +153,6 @@ def main(filename):
         check_image.quality_criteria = config_quality_criteria
 
         volume_reducer = DataVolumeReduction(camera_geom=camera_geom)
-        survived_pixels = []
 
         for i, (row_image, row_parameters) in enumerate(
             tqdm(

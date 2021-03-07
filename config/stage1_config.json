@@ -8,10 +8,16 @@
       "LSTR0Corrections": {
         "drs4_pedestal_path": "/home/jonas/aktuell/workb/dvr_test/data/crab/calibrations/drs4_pedestal.Run2920.0000.fits",
         "drs4_time_calibration_path": "/home/jonas/aktuell/workb/dvr_test/data/crab/calibrations/time_calibration.Run2921.0000.hdf5",
-        "calibration_path": "/home/jonas/aktuell/workb/dvr_test/data/crab/calibrations/calibration.Run2921.0000.hdf5"
+        "calibration_path": "/home/jonas/aktuell/workb/dvr_test/data/crab/calibrations/calibration.Run2921.0000.hdf5",
+        "gain_selection_threshold": 3500,
+        "add_calibration_timeshift": true
       },
       "PointingSource": {
         "drive_report_path": "/home/jonas/aktuell/workb/dvr_test/data/crab/calibrations/drive_log_20_11_18.txt"
+      },
+      "EventTimeCalculator": {
+      "dragon_reference_time": 1605743683382778202,
+      "dragon_reference_counter": 6382777900
       }
     },
     "CameraCalibrator": {

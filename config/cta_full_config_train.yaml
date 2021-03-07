@@ -12,6 +12,9 @@ keep_images: False
 
 telescopes:
     - tel_001
+    - tel_002
+    - tel_003
+    - tel_004
 
 # Dummy cuts to ensure this is working
 selection:
