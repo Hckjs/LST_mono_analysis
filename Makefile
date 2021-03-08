@@ -19,8 +19,6 @@ PROTON_FILE = proton_20deg_0deg___$(SIM_VERSION)
 
 CRAB_RUNS=2924
 
-CRAB_DL1=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl1_LST-1.Run0, $(CRAB_RUNS)))
-CRAB_DL1_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl1_dvr_LST-1.Run0, $(CRAB_RUNS)))
 CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_LST-1.Run0, $(CRAB_RUNS)))
 CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_LST-1.Run0, $(CRAB_RUNS)))
 
@@ -32,7 +30,6 @@ all: $(OUTDIR)/cv_separation.h5 \
 	$(OUTDIR)/regressor_plots.pdf \
 	$(OUTDIR)/disp_plots.pdf \
 	$(OUTDIR)/separator_plots.pdf \
-	$(CRAB_DL1_DVR) \
 	$(CRAB_DL2_DVR) \
 	$(CRAB_DL2) \
     $(OUTDIR)/crab_theta2.pdf \
@@ -42,22 +39,6 @@ all: $(OUTDIR)/cv_separation.h5 \
 #	$(OUTDIR)/dl2_$(PROTON_FILE)_testing.h5 \
 #   $(OUTDIR)/dl2_$(ELECTRON_FILE)_testing.h5 \
 #   $(OUTDIR)/pyirf.fits.gz \
-
-#apply DVR and redo parameterization
-$(OUTDIR)/dl1_dvr_%.h5: $(OBSDIR)/dl1_%.h5 redo_dl0_dl1.py | $(OUTDIR)
-	cp \
-		$< \
-		$(OUTDIR)/tempfile.h5
-
-	python redo_dl0_dl1.py \
-		$(OUTDIR)/tempfile.h5
-
-	ptrepack \
-		$(OUTDIR)/tempfile.h5 \
-		$@ \
-		--keep-source-filters
-
-	rm -f $(OUTDIR)/tempfile.h5
 
 #precuts
 $(OUTDIR)/%_precuts.h5: $(SIMDIR)/%.h5 $(AICT_CONFIG_TRAIN) | $(OUTDIR)
@@ -98,42 +79,6 @@ $(OUTDIR)/regressor.pkl $(OUTDIR)/cv_regressor.h5: $(AICT_CONFIG_TRAIN) $(OUTDIR
 
 #apply models
 $(OUTDIR)/dl2_%.h5: $(OBSDIR)/dl1_%.h5 $(OUTDIR)/separator.pkl $(OUTDIR)/disp.pkl $(OUTDIR)/regressor.pkl $(AICT_CONFIG) add_coords.py | $(OUTDIR)
-	aict_apply_cuts \
-		$(AICT_CONFIG) \
-		$< \
-		$(OUTDIR)/tempfile.h5 \
-		--chunksize=100000
-
-	aict_apply_separation_model \
-		$(AICT_CONFIG) \
-		$(OUTDIR)/tempfile.h5 \
-		$(OUTDIR)/separator.pkl \
-		--chunksize=100000
-
-	aict_apply_disp_regressor \
-		$(AICT_CONFIG) \
-		$(OUTDIR)/tempfile.h5 \
-		$(OUTDIR)/disp.pkl \
-		$(OUTDIR)/sign.pkl \
-		--chunksize=100000
-
-	aict_apply_energy_regressor \
-		$(AICT_CONFIG) \
-		$(OUTDIR)/tempfile.h5 \
-		$(OUTDIR)/regressor.pkl \
-		--chunksize=100000
-
-	python add_coords.py \
-		$(OUTDIR)/tempfile.h5
-
-	ptrepack \
-		$(OUTDIR)/tempfile.h5 \
-		$@ \
-		--keep-source-filters
-
-	rm -f $(OUTDIR)/tempfile.h5
-
-$(OUTDIR)/dl2_%.h5: $(OUTDIR)/dl1_%.h5 $(OUTDIR)/separator.pkl $(OUTDIR)/disp.pkl $(OUTDIR)/regressor.pkl $(AICT_CONFIG) add_coords.py | $(OUTDIR)
 	aict_apply_cuts \
 		$(AICT_CONFIG) \
 		$< \
