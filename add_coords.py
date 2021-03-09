@@ -14,6 +14,7 @@ erfa_astrom.set(ErfaAstromInterpolator(10 * u.min))
 location = EarthLocation.from_geodetic(-17.89139 * u.deg, 28.76139 * u.deg, 2184 * u.m)
 
 pointing_key = '/dl1/monitoring/telescope/pointing/tel_001'
+trigger_key = '/dl1/event/telescope/trigger'
 source_pred_key = '/dl2/event/telescope/tel_001/disp_prediction'
 gamma_pred_key = '/dl2/event/telescope/tel_001/gamma_prediction'
 gamma_energy_pred_key = '/dl2/event/telescope/tel_001/gamma_energy_prediction'
@@ -23,16 +24,18 @@ gamma_energy_pred_key = '/dl2/event/telescope/tel_001/gamma_energy_prediction'
 def main(infile):
 
     table_pointing = read_table(infile, pointing_key)
+    table_trigger = read_table(infile, trigger_key)
     table_disp_pred = read_table(infile, source_pred_key)
     table_gamma_pred = read_table(infile, gamma_pred_key)
     table_gamma_energy_pred = read_table(infile, gamma_energy_pred_key)
 
+    interp_az = np.interp(table_trigger['time'], table_pointing['time'], table_pointing['azimuth'])
+    interp_alt = np.interp(table_trigger['time'], table_pointing['time'], table_pointing['altitude'])
+
     columns = [
         table_disp_pred['obs_id'],
         table_disp_pred['event_id'],
-        table_pointing['time'],
-        table_pointing['altitude'],
-        table_pointing['azimuth'],
+        table_trigger['time'],
         table_disp_pred['source_x_pred'],
         table_disp_pred['source_y_pred'],
         table_disp_pred['disp_pred'],
@@ -43,6 +46,9 @@ def main(infile):
     df = pd.DataFrame()
     for col in columns:
         df[col.name] = col
+
+    df['azimuth'] = interp_az
+    df['altitude'] = interp_alt
 
     # TODO: Exception für Sim-files hinzufügen
     obstime = Time(df.time, format='mjd', scale='tai')
