@@ -1,5 +1,6 @@
 import pandas as pd
 import tables as tb
+import numpy as np
 from ctapipe.io import read_table
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, AltAz, EarthLocation
