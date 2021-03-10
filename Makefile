@@ -1,6 +1,6 @@
 OUTDIR = build
 
-SIM_VERSION=cta-prod5-paranal_desert-2147m-Paranal-dark_merged
+SIM_VERSION= cta-prod5-paranal_desert-2147m-Paranal-dark_merged
 
 OBSDIR = /home/jonas/aktuell/workb/dvr_test/data/crab/DL1/lpws
 SIMDIR = /home/jonas/aktuell/workb/dvr_test/data/mc/prod5/ctapipe
@@ -145,7 +145,7 @@ $(OUTDIR)/crab_theta2.pdf: theta2_wobble.py plotting.py calculation.py $(CRAB_DL
 		$(CRAB_DL2) \
 		'Crab' \
 		0.04 \
-		0.80
+		0.60
 
 $(OUTDIR)/crab_theta2_dvr.pdf: theta2_wobble.py plotting.py calculation.py $(CRAB_DL2_DVR) | $(OUTDIR)
 	python theta2_wobble.py \
@@ -153,7 +153,7 @@ $(OUTDIR)/crab_theta2_dvr.pdf: theta2_wobble.py plotting.py calculation.py $(CRA
 		$(CRAB_DL2_DVR) \
 		'Crab' \
 		0.04 \
-		0.80
+		0.60
 
 #pyirf sensitivity 
 $(OUTDIR)/pyirf.fits.gz: pyirf_sensitivity.py $(OUTDIR)/dl2_$(GAMMA_FILE)_testing.h5 $(OUTDIR)/dl2_$(PROTON_FILE)_testing.h5 $(OUTDIR)/dl2_$(ELECTRON_FILE)_testing.h5 | $(OUTDIR)

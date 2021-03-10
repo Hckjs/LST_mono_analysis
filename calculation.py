@@ -17,10 +17,11 @@ from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 erfa_astrom.set(ErfaAstromInterpolator(10 * u.min))
 
 
-def calc_ontime(df):
-    delta = np.diff(df.time.sort_values())
+def calc_ontime(time):
+    time.sort()
+    delta = np.diff(time)
     delta = delta[np.abs(delta) < 10]
-    return len(df) * delta.mean() * u.s
+    return len(time) * delta.mean() * u.s
 
 
 def calc_theta_off(source_coord: SkyCoord, reco_coord: SkyCoord, pointing_coord: SkyCoord, n_off=5):
@@ -42,7 +43,9 @@ def read_run_calculate_thetas(run, threshold, source: SkyCoord, n_offs):
 
     df = pd.read_hdf(run, key = '/dl2/event/telescope/tel_001/table')
 
-    ontime = calc_ontime(df).to(u.hour)
+    t = Time(df.time, format='mjd', scale='tai')
+    t.format = 'unix'
+    ontime = calc_ontime(t.value).to(u.hour)
 
     if type(threshold) == float:
         df_selected = df.query(f'gamma_prediction > {threshold}')

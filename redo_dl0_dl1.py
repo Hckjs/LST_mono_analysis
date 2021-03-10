@@ -136,7 +136,6 @@ def main(filename):
     subarray = SubarrayDescription.from_hdf(filename)
     ped_counter = 0
 
-    #with tb.open_file(infile, mode='r') as input_file
     with tb.open_file(filename, mode='a') as output_file:
         camera_geom = subarray.tel[1].camera.geometry
         image_nodepath = '/dl1/event/telescope/images/tel_001'
@@ -177,7 +176,7 @@ def main(filename):
 
             if output_file.root[trigger_nodepath][i]['event_type'] != 32:
                 continue
-
+            
             config_dvr['picture_threshold_pe'] = np.maximum(
                 config_cleaning['picture_threshold_pe'],
                 pedestal_thresh
@@ -216,8 +215,11 @@ def main(filename):
 
             for container in parameter_container.values():
                 for colname, value in container.items(add_prefix=True):
-                    row_parameters[colname] = u.Quantity(value).value
-            
+                    if colname in {'hillas_psi', 'hillas_phi'}:
+                        row_parameters[colname] = np.rad2deg(u.Quantity(value).value)
+                    else:
+                        row_parameters[colname] = u.Quantity(value).value
+
             row_image.update()
             row_parameters.update()
 

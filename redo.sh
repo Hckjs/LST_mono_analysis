@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 
-input=""
-output=""
-indir=""
+input="/home/jonas/aktuell/workb/dvr_test/data/crab/DL1/lpws/dl1_LST-1.Run02924.h5"
+output="/home/jonas/aktuell/workb/dvr_test/data/crab/DL1/lpws/dl1_dvr_LST-1.Run02924.h5"
+indir="/home/jonas/aktuell/workb/dvr_test/data/crab/DL1/lpws"
 
 cp \
 	$input \
