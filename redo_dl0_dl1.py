@@ -195,7 +195,7 @@ def main(filename):
             cleaning_mask = tailcuts_clean(
                 geom=camera_geom,
                 image=image,
-                picture_thresh=config_cleaning['picture_threshold_pe'],
+                picture_thresh=config_dvr['picture_threshold_pe'],
                 boundary_thresh=config_cleaning['boundary_threshold_pe'],
                 keep_isolated_pixels=config_cleaning['keep_isolated_pixels'],
                 min_number_picture_neighbors=config_cleaning['min_picture_neighbors']
