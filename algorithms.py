@@ -30,24 +30,17 @@ def infect_pixel_charge(image, mask, camera_geom, config):
 
 def infect_peak_time(peak_time, mask, camera_geom, config):
     mask_copy = mask.copy()
-    mask_diff = []
+    pixels_to_add = 1
 
-    while (not np.array_equal(mask_copy, mask_diff)):
-        mask_diff = mask_copy
+    while (np.sum(pixels_to_add) != 0):
         outer_ring = camera_geom.neighbor_matrix_sparse.dot(mask_copy) ^ mask_copy
         inner_ring = camera_geom.neighbor_matrix_sparse.dot(outer_ring) & mask_copy
-
-        pixels_to_add = np.array([])
-        mask_ring = inner_ring.copy()
-        for pixel in np.where(mask_ring)[0]:
-            neighbors = camera_geom.neighbor_matrix_sparse[pixel].indices
-            time_diff = np.abs(peak_time[neighbors] - peak_time[pixel])
-            if sum(time_diff < config['time_limit']) >= config['min_number_neighbors']:
-                pixels_to_add = np.append(pixels_to_add,
-                                          neighbors[time_diff < config['time_limit']])
-
-        mask_ring[pixels_to_add.astype(int)] = True
-        mask_copy = (mask_copy | mask_ring)
+        
+        time_diffs = np.abs(peak_time[inner_ring, None] - peak_time)
+        valid_neighbors = (time_diffs < config['time_limit']) & camera_geom.neighbor_matrix[inner_ring] & outer_ring
+        enough_neighbors = np.count_nonzero(valid_neighbors, axis=1) >= config['min_number_neighbors']
+        pixels_to_add = valid_neighbors[enough_neighbors].any(axis=0)
+        mask_copy = (mask_copy | pixels_to_add)
 
     return mask_copy
 

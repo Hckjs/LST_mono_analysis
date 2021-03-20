@@ -48,7 +48,7 @@ config_dvr={
     'min_picture_neighbors':1,
     'keep_isolated_pixels':False,
     'n_end_dilates':1,
-    'min_number_neighbors':2,
+    'min_number_neighbors':1,
     'time_limit':1.,
     'sigma_thresh':2.5
 }
@@ -66,6 +66,9 @@ config_quality_criteria = [
 ]
 
 ped_len = 100
+
+image_scale = 10.0
+peak_time_scale = 100.0
 
 def parameterize_image(check_image, image, signal_pixels, geometry, peak_time=None):
     image_selected = image[signal_pixels]
@@ -114,8 +117,9 @@ def parameterize_image(check_image, image, signal_pixels, geometry, peak_time=No
     return DEFAULT_IMAGE_PARAMETERS
 
 def get_pedestal_thresh(ped_images, sigma_thresh):
-    ped_mean = np.average(ped_images, axis=0)
-    ped_std = np.std(ped_images, axis=0)
+    images = ped_images / image_scale
+    ped_mean = np.average(images, axis=0)
+    ped_std = np.std(images, axis=0)
     pedestal_thresh = ped_mean + sigma_thresh * ped_std
 
     return pedestal_thresh
@@ -144,9 +148,9 @@ def main(filename):
         image_table = output_file.root[image_nodepath]
         parameters_table = output_file.root[parameters_nodepath]
 
-        pedestal_thresh, ped_images = calc_first_pedestal_thresh(output_file,
-                                                                 config_dvr['sigma_thresh'],
-                                                                 ped_len)
+        #pedestal_thresh, ped_images = calc_first_pedestal_thresh(output_file,
+        #                                                         config_dvr['sigma_thresh'],
+        #                                                         ped_len)
 
         check_image = ImageQualityQuery()
         check_image.quality_criteria = config_quality_criteria
@@ -163,6 +167,9 @@ def main(filename):
             image = row_image['image'].copy()
             peak_time = row_image['peak_time'].copy()
 
+            image_transf = image / image_scale
+            peak_time_transf = peak_time / peak_time_scale
+            """
             if output_file.root[trigger_nodepath][i]['event_type'] == 2:
                 if ped_counter < ped_len:
                     ped_counter += 1
@@ -173,28 +180,28 @@ def main(filename):
                     pedestal_thresh = get_pedestal_thresh(ped_images,
                                                           config_dvr['sigma_thresh'])
                     continue
-
+            """
             if output_file.root[trigger_nodepath][i]['event_type'] != 32:
                 continue
-            
+            """
             config_dvr['picture_threshold_pe'] = np.maximum(
                 config_cleaning['picture_threshold_pe'],
                 pedestal_thresh
             )
-
+            """
             if config_dvr['volume_reducer'] == 'tcdvr':
-                dvr_mask = volume_reducer.tailcuts_dvr(image, config_dvr)
+                dvr_mask = volume_reducer.tailcuts_dvr(image_transf, config_dvr)
             if config_dvr['volume_reducer'] == 'ptdvr':
-                dvr_mask = volume_reducer.peak_time_dvr(image, peak_time, config_dvr)
+                dvr_mask = volume_reducer.peak_time_dvr(image_transf, peak_time_transf, config_dvr)
             if config_dvr['volume_reducer'] == 'mixeddvr':
-                dvr_mask = volume_reducer.mixed_dvr(image, peak_time, config_dvr)
+                dvr_mask = volume_reducer.mixed_dvr(image_transf, peak_time_transf, config_dvr)
 
             image[~dvr_mask] = 0
             peak_time[~dvr_mask] = 0
 
             cleaning_mask = tailcuts_clean(
                 geom=camera_geom,
-                image=image,
+                image=(image / image_scale),
                 picture_thresh=config_dvr['picture_threshold_pe'],
                 boundary_thresh=config_cleaning['boundary_threshold_pe'],
                 keep_isolated_pixels=config_cleaning['keep_isolated_pixels'],
@@ -203,10 +210,10 @@ def main(filename):
 
             parameter_container = parameterize_image(
                 check_image=check_image,
-                image=image,
+                image=(image / image_scale),
                 signal_pixels=cleaning_mask,
                 geometry=camera_geom,
-                peak_time=peak_time
+                peak_time=(peak_time / peak_time_scale)
             )
 
             row_image['image'] = image
