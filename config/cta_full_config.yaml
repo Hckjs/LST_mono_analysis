@@ -15,13 +15,13 @@ telescopes:
 
 # Dummy cuts to ensure this is working
 selection:
-    hillas_intensity:
+    - hillas_intensity:
       - '>='
       - 300
-    leakage_intensity_width_1:
+    - leakage_intensity_width_1:
       - <
       - 0.2
-    leakage_intensity_width_2:
+    - leakage_intensity_width_2:
       - <
       - 0.2
 
