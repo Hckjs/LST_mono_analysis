@@ -16,9 +16,9 @@ location = EarthLocation.from_geodetic(-17.89139 * u.deg, 28.76139 * u.deg, 2184
 
 pointing_key = '/dl1/monitoring/telescope/pointing/tel_001'
 trigger_key = '/dl1/event/telescope/trigger'
-source_pred_key = '/dl2/event/telescope/tel_001/disp_prediction'
-gamma_pred_key = '/dl2/event/telescope/tel_001/gamma_prediction'
-gamma_energy_pred_key = '/dl2/event/telescope/tel_001/gamma_energy_prediction'
+source_pred_key = '/dl2/event/telescope/disp_prediction/tel_001'
+gamma_pred_key = '/dl2/event/telescope/gamma_prediction/tel_001'
+gamma_energy_pred_key = '/dl2/event/telescope/gamma_energy_prediction/tel_001'
 
 @click.command()
 @click.argument('infile', type=click.Path(exists=True, dir_okay=False))
@@ -37,9 +37,9 @@ def main(infile):
         table_disp_pred['obs_id'],
         table_disp_pred['event_id'],
         table_trigger['time'],
-        table_disp_pred['source_x_pred'],
-        table_disp_pred['source_y_pred'],
-        table_disp_pred['disp_pred'],
+        table_disp_pred['source_x_prediction'],
+        table_disp_pred['source_y_prediction'],
+        table_disp_pred['disp_prediction'],
         table_gamma_pred['gamma_prediction'],
         table_gamma_energy_pred['gamma_energy_prediction']
     ]
