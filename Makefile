@@ -1,14 +1,14 @@
-OUTDIR = build
+OUTDIR = /fefs/aswg/workspace/jonas.hackfeld/build
+PLOTS = plots
 
 SIM_VERSION= cta-prod5-paranal_desert-2147m-Paranal-dark_merged
 
-OBSDIR = /home/jonas/aktuell/workb/dvr_test/data/crab/DL1/lpws
-SIMDIR = /home/jonas/aktuell/workb/dvr_test/data/mc/prod5/ctapipe
+OBSDIR = /fefs/aswg/workspace/jonas.hackfeld/data/obs/crab/20201121/DL1
+SIMDIR = /fefs/aswg/workspace/jonas.hackfeld/data/mc/prod5/ctapipe
 
 
 AICT_CONFIG = config/cta_full_config.yaml
 AICT_CONFIG_TRAIN = config/cta_full_config_train.yaml
-STAGE1_CONFIG = config/stage1_config.json
 
 
 GAMMA_FILE = gamma_20deg_0deg___$(SIM_VERSION)
@@ -17,7 +17,7 @@ PROTON_FILE = proton_20deg_0deg___$(SIM_VERSION)
 #ELECTRON_FILE = electron_20deg_0deg___$(SIM_VERSION)
 
 
-CRAB_RUNS=2924
+CRAB_RUNS=2988 2989 2990 2991 2992
 
 CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_LST-1.Run0, $(CRAB_RUNS)))
 CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_LST-1.Run0, $(CRAB_RUNS)))
@@ -27,13 +27,13 @@ CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_LST-1.Run0, $(CRAB_R
 all: $(OUTDIR)/cv_separation.h5 \
 	$(OUTDIR)/cv_disp.h5 \
 	$(OUTDIR)/cv_regressor.h5 \
-	$(OUTDIR)/regressor_plots.pdf \
-	$(OUTDIR)/disp_plots.pdf \
-	$(OUTDIR)/separator_plots.pdf \
+	$(PLOTS)/regressor_plots.pdf \
+	$(PLOTS)/disp_plots.pdf \
+	$(PLOTS)/separator_plots.pdf \
 	$(CRAB_DL2_DVR) \
 	$(CRAB_DL2) \
-    $(OUTDIR)/crab_theta2.pdf \
-    $(OUTDIR)/crab_theta2_dvr.pdf
+	$(PLOTS)/crab_theta2.pdf \
+	$(PLOTS)/crab_theta2_dvr.pdf
 #	$(OUTDIR)/dl2_$(GAMMA_FILE)_testing.h5 \
 #	$(OUTDIR)/dl2_$(GAMMA_DIFFUSE_FILE)_testing.h5 \
 #	$(OUTDIR)/dl2_$(PROTON_FILE)_testing.h5 \
@@ -115,21 +115,21 @@ $(OUTDIR)/dl2_%.h5: $(OBSDIR)/dl1_%.h5 $(OUTDIR)/separator.pkl $(OUTDIR)/disp.pk
 	rm -f $(OUTDIR)/tempfile.h5
 
 #performance plots
-$(OUTDIR)/regressor_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_regressor.h5 | $(OUTDIR)
+$(PLOTS)/regressor_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_regressor.h5 | $(OUTDIR)
 	aict_plot_regressor_performance \
 		$(AICT_CONFIG_TRAIN) \
 		$(OUTDIR)/cv_regressor.h5 \
 		$(OUTDIR)/regressor.pkl \
 		-o $@
 
-$(OUTDIR)/separator_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_separation.h5 | $(OUTDIR)
+$(PLOTS)/separator_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_separation.h5 | $(OUTDIR)
 	aict_plot_separator_performance \
 		$(AICT_CONFIG_TRAIN) \
 		$(OUTDIR)/cv_separation.h5 \
 		$(OUTDIR)/separator.pkl \
 		-o $@
 
-$(OUTDIR)/disp_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_disp.h5 $(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 | $(OUTDIR)
+$(PLOTS)/disp_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_disp.h5 $(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 | $(OUTDIR)
 	aict_plot_disp_performance \
 		$(AICT_CONFIG_TRAIN) \
 		$(OUTDIR)/cv_disp.h5 \
@@ -139,17 +139,17 @@ $(OUTDIR)/disp_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_disp.h5 $(OUTDIR)/dl
 		-o $@
 
 #observations
-$(OUTDIR)/crab_theta2.pdf: theta2_wobble.py plotting.py calculation.py $(CRAB_DL2) | $(OUTDIR)
+$(PLOTS)/crab_theta2.pdf: theta2_wobble.py plotting.py calculation.py $(CRAB_DL2) | $(OUTDIR)
 	python theta2_wobble.py \
-		$(OUTDIR)/crab_theta2.pdf \
+		$@ \
 		$(CRAB_DL2) \
 		'Crab' \
 		0.04 \
 		0.60
 
-$(OUTDIR)/crab_theta2_dvr.pdf: theta2_wobble.py plotting.py calculation.py $(CRAB_DL2_DVR) | $(OUTDIR)
+$(PLOTS)/crab_theta2_dvr.pdf: theta2_wobble.py plotting.py calculation.py $(CRAB_DL2_DVR) | $(OUTDIR)
 	python theta2_wobble.py \
-		$(OUTDIR)/crab_theta2_dvr.pdf \
+		$@ \
 		$(CRAB_DL2_DVR) \
 		'Crab' \
 		0.04 \
