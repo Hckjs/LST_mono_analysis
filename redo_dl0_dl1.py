@@ -49,7 +49,7 @@ config_dvr={
     'keep_isolated_pixels':False,
     'n_end_dilates':1,
     'min_number_neighbors':1,
-    'time_limit':1.,
+    'time_limit':2.,
     'sigma_thresh':2.5
 }
 
