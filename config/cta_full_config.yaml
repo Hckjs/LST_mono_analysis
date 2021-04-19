@@ -8,7 +8,6 @@ n_cross_validations: 5
 # and makes sure the obs_id, event_id and tel_id are loaded into the dataframe
 data_format: CTA
 datamodel_version: 1.1.0
-keep_images: False
 
 telescopes:
     - tel_001
