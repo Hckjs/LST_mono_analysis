@@ -19,7 +19,7 @@ telescopes:
 # Dummy cuts to ensure this is working
 selection:
     hillas_intensity:
-      - '>='  # needs to be in quotes because > and ! are special character in yaml
+      - '>='
       - 300
     leakage_intensity_width_1:
       - <
