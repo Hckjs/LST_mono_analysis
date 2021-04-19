@@ -65,7 +65,7 @@ config_quality_criteria = [
     ("enough_charge", "lambda im: im.sum() > 50"),
 ]
 
-ped_len = 150
+ped_len = 100
 image_scale = 10.0
 peak_time_scale = 100.0
 
