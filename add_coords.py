@@ -36,7 +36,6 @@ def main(infile):
     columns = [
         table_disp_pred['obs_id'],
         table_disp_pred['event_id'],
-        table_trigger['time'],
         table_disp_pred['source_x_prediction'],
         table_disp_pred['source_y_prediction'],
         table_disp_pred['disp_prediction'],
@@ -45,6 +44,7 @@ def main(infile):
     ]
 
     df = pd.DataFrame()
+    df['time'] = table_trigger['time'].mjd
     for col in columns:
         df[col.name] = col
 
