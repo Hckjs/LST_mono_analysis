@@ -66,8 +66,8 @@ def main(infile):
     camera_frame = CameraFrame(telescope_pointing=pointing, location=location, obstime=obstime, focal_length=28 * u.m)
 
     prediction_cam = SkyCoord(
-        x=u.Quantity(df.source_x_pred.values, u.m, copy=False),
-        y=u.Quantity(df.source_y_pred.values, u.m, copy=False),
+        x=u.Quantity(df.source_x_prediction.values, u.m, copy=False),
+        y=u.Quantity(df.source_y_prediction.values, u.m, copy=False),
         frame=camera_frame,
     )
 
