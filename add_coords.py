@@ -83,7 +83,7 @@ def main(infile):
     df['pointing_dec'] = pointing_icrs.dec.rad
 
     with tb.open_file(infile, mode='a') as file:
-        file.remove_node('/dl2/event/telescope/tel_001', recursive=True)
+        file.remove_node('/dl2/event/telescope', recursive=True)
 
     with pd.HDFStore(infile) as out_:
         out_.put(key='/dl2/event/telescope/tel_001', value=df, format='table', data_columns=True)
