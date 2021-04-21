@@ -16,9 +16,9 @@ location = EarthLocation.from_geodetic(-17.89139 * u.deg, 28.76139 * u.deg, 2184
 
 pointing_key = '/dl1/monitoring/telescope/pointing/tel_001'
 trigger_key = '/dl1/event/telescope/trigger'
-source_pred_key = '/dl2/event/telescope/tel_001/disp_prediction'
-gamma_pred_key = '/dl2/event/telescope/tel_001/gamma_prediction'
-gamma_energy_pred_key = '/dl2/event/telescope/tel_001/gamma_energy_prediction'
+source_pred_key = '/dl2/event/telescope/disp_prediction/tel_001'
+gamma_pred_key = '/dl2/event/telescope/gamma_prediction/tel_001'
+gamma_energy_pred_key = '/dl2/event/telescope/gamma_energy_prediction/tel_001'
 
 @click.command()
 @click.argument('infile', type=click.Path(exists=True, dir_okay=False))
@@ -30,28 +30,27 @@ def main(infile):
     table_gamma_pred = read_table(infile, gamma_pred_key)
     table_gamma_energy_pred = read_table(infile, gamma_energy_pred_key)
 
-    interp_az = np.interp(table_trigger['time'], table_pointing['time'], table_pointing['azimuth'])
-    interp_alt = np.interp(table_trigger['time'], table_pointing['time'], table_pointing['altitude'])
+    interp_az = np.interp(table_trigger['time'].mjd, table_pointing['time'].mjd, table_pointing['azimuth'])
+    interp_alt = np.interp(table_trigger['time'].mjd, table_pointing['time'].mjd, table_pointing['altitude'])
 
     columns = [
         table_disp_pred['obs_id'],
         table_disp_pred['event_id'],
-        table_trigger['time'],
-        table_disp_pred['source_x_pred'],
-        table_disp_pred['source_y_pred'],
-        table_disp_pred['disp_pred'],
+        table_disp_pred['source_x_prediction'],
+        table_disp_pred['source_y_prediction'],
+        table_disp_pred['disp_prediction'],
         table_gamma_pred['gamma_prediction'],
         table_gamma_energy_pred['gamma_energy_prediction']
     ]
 
     df = pd.DataFrame()
+    df['time'] = table_trigger['time'].mjd
     for col in columns:
         df[col.name] = col
 
     df['azimuth'] = interp_az
     df['altitude'] = interp_alt
 
-    # TODO: Exception für Sim-files hinzufügen
     obstime = Time(df.time, format='mjd', scale='tai')
     obstime.format = 'unix'
 
@@ -66,8 +65,8 @@ def main(infile):
     camera_frame = CameraFrame(telescope_pointing=pointing, location=location, obstime=obstime, focal_length=28 * u.m)
 
     prediction_cam = SkyCoord(
-        x=u.Quantity(df.source_x_pred.values, u.m, copy=False),
-        y=u.Quantity(df.source_y_pred.values, u.m, copy=False),
+        x=u.Quantity(df.source_x_prediction.values, u.m, copy=False),
+        y=u.Quantity(df.source_y_prediction.values, u.m, copy=False),
         frame=camera_frame,
     )
 
@@ -83,7 +82,7 @@ def main(infile):
     df['pointing_dec'] = pointing_icrs.dec.rad
 
     with tb.open_file(infile, mode='a') as file:
-        file.remove_node('/dl2/event/telescope/tel_001', recursive=True)
+        file.remove_node('/dl2/event/telescope', recursive=True)
 
     with pd.HDFStore(infile) as out_:
         out_.put(key='/dl2/event/telescope/tel_001', value=df, format='table', data_columns=True)

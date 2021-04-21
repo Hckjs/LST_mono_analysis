@@ -7,8 +7,8 @@ SIMDIR = /home/jonas/aktuell/workb/dvr_test/data/mc/prod5/ctapipe
 
 
 AICT_CONFIG = config/cta_full_config.yaml
-AICT_CONFIG_TRAIN = config/cta_full_config_train.yaml
-STAGE1_CONFIG = config/stage1_config.json
+#AICT_CONFIG_TRAIN = config/cta_full_config_train.yaml
+AICT_CONFIG_TRAIN = AICT_CONFIG
 
 
 GAMMA_FILE = gamma_20deg_0deg___$(SIM_VERSION)
@@ -17,7 +17,7 @@ PROTON_FILE = proton_20deg_0deg___$(SIM_VERSION)
 #ELECTRON_FILE = electron_20deg_0deg___$(SIM_VERSION)
 
 
-CRAB_RUNS=2924
+CRAB_RUNS=2992
 
 CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_LST-1.Run0, $(CRAB_RUNS)))
 CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_LST-1.Run0, $(CRAB_RUNS)))
