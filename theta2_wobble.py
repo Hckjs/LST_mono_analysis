@@ -96,18 +96,8 @@ def main(output, data, source, theta2_cut, threshold, n_offs, n_jobs):
 
     n_off_test = np.count_nonzero(theta_off.deg**2 < 0.04)
     n_on_test = np.count_nonzero(theta.deg**2 < 0.04)
-    print(n_on_test, n_off_test, len(theta), len(theta_off))
-    print('theta', np.mean(theta.deg), np.max(theta.deg), np.min(theta.deg))
-    print('test')
-    print('theta_off', theta_off.value)
-    """
-    theta 2.630180000676223 9.47685800700849 0.009327559649401136
-    theta_off [1.33728884 7.20562858 2.16581586 ... 2.17973265 2.13371522 0.99190007]
 
-    theta 1.9189700781529953 8.111381884763475 0.009623158290280561
-    test
-    theta_off [2.47162947 1.75004802 0.54439845 ... 2.6093192  5.20401894 2.00153009]
-    """
+
     ##############################################################################################################
     # plots
     ##############################################################################################################
