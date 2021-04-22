@@ -108,7 +108,7 @@ def main(output, data, source, theta2_cut, threshold, n_offs, n_jobs):
         source, ontime=ontime,
         ax=ax
     )
-    ax.set_title('Theta calculated in ICRS using astropy')
+    #ax.set_title('Theta calculated in ICRS using astropy')
     """
     figures.append(plt.figure())
     ax = figures[-1].add_subplot(1, 1, 1)

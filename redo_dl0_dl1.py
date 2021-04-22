@@ -147,9 +147,9 @@ def main(filename):
         image_table = output_file.root[image_nodepath]
         parameters_table = output_file.root[parameters_nodepath]
 
-        #pedestal_thresh, ped_images = calc_first_pedestal_thresh(output_file,
-        #                                                         config_dvr['sigma_thresh'],
-        #                                                         ped_len)
+        pedestal_thresh, ped_images = calc_first_pedestal_thresh(output_file,
+                                                                 config_dvr['sigma_thresh'],
+                                                                 ped_len)
 
         check_image = ImageQualityQuery()
         check_image.quality_criteria = config_quality_criteria
@@ -169,7 +169,7 @@ def main(filename):
             image_transf = image / image_scale
             peak_time_transf = peak_time / peak_time_scale
 
-            """
+
             if output_file.root[trigger_nodepath][i]['event_type'] == 2:
                 if ped_counter < ped_len:
                     ped_counter += 1
@@ -180,15 +180,15 @@ def main(filename):
                     pedestal_thresh = get_pedestal_thresh(ped_images,
                                                           config_dvr['sigma_thresh'])
                     continue
-            """
+
             if output_file.root[trigger_nodepath][i]['event_type'] != 32:
                 continue
-            """
+
             config_dvr['picture_threshold_pe'] = np.maximum(
                 config_cleaning['picture_threshold_pe'],
                 pedestal_thresh
             )
-            """
+
             if config_dvr['volume_reducer'] == 'tcdvr':
                 dvr_mask = volume_reducer.tailcuts_dvr(image_transf, config_dvr)
             if config_dvr['volume_reducer'] == 'ptdvr':

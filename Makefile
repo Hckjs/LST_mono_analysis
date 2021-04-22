@@ -8,7 +8,6 @@ SIMDIR = /fefs/aswg/workspace/jonas.hackfeld/data/mc/prod5/ctapipe
 
 
 AICT_CONFIG = config/cta_full_config.yaml
-AICT_CONFIG_TRAIN = config/cta_full_config_train.yaml
 
 
 GAMMA_FILE = gamma_20deg_0deg___$(SIM_VERSION)
@@ -19,8 +18,8 @@ PROTON_FILE = proton_20deg_0deg___$(SIM_VERSION)
 
 CRAB_RUNS=2988 2989 2990 2991 2992
 
-CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_LST-1.Run0, $(CRAB_RUNS)))
-CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_LST-1.Run0, $(CRAB_RUNS)))
+CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_transf_LST-1.Run0, $(CRAB_RUNS)))
+CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_transf_LST-1.Run0, $(CRAB_RUNS)))
 
 
 all: $(OUTDIR)/cv_separation.h5 \
@@ -40,9 +39,9 @@ all: $(OUTDIR)/cv_separation.h5 \
 #   $(OUTDIR)/pyirf.fits.gz \
 
 #precuts
-$(OUTDIR)/%_precuts.h5: $(SIMDIR)/%.h5 $(AICT_CONFIG_TRAIN) | $(OUTDIR)
+$(OUTDIR)/%_precuts.h5: $(SIMDIR)/%.h5 $(AICT_CONFIG) | $(OUTDIR)
 	aict_apply_cuts \
-		$(AICT_CONFIG_TRAIN) \
+		$(AICT_CONFIG) \
 		$< \
 		$@
 
@@ -52,26 +51,26 @@ $(OUTDIR)/dl1_%_testing.h5: $(SIMDIR)/dl1_%_testing.h5 | $(OUTDIR)
 		$@
 
 #train models
-$(OUTDIR)/separator.pkl $(OUTDIR)/cv_separation.h5: $(AICT_CONFIG_TRAIN) $(OUTDIR)/dl1_$(PROTON_FILE)_training_precuts.h5 | $(OUTDIR)
+$(OUTDIR)/separator.pkl $(OUTDIR)/cv_separation.h5: $(AICT_CONFIG) $(OUTDIR)/dl1_$(PROTON_FILE)_training_precuts.h5 | $(OUTDIR)
 $(OUTDIR)/separator.pkl $(OUTDIR)/cv_separation.h5: $(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 | $(OUTDIR)
 	aict_train_separation_model \
-		$(AICT_CONFIG_TRAIN) \
+		$(AICT_CONFIG) \
 		$(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 \
 		$(OUTDIR)/dl1_$(PROTON_FILE)_training_precuts.h5 \
 		$(OUTDIR)/cv_separation.h5 \
 		$(OUTDIR)/separator.pkl
 
-$(OUTDIR)/disp.pkl $(OUTDIR)/sign.pkl $(OUTDIR)/cv_disp.h5: $(AICT_CONFIG_TRAIN) $(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 | $(OUTDIR)
+$(OUTDIR)/disp.pkl $(OUTDIR)/sign.pkl $(OUTDIR)/cv_disp.h5: $(AICT_CONFIG) $(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 | $(OUTDIR)
 	aict_train_disp_regressor \
-		$(AICT_CONFIG_TRAIN) \
+		$(AICT_CONFIG) \
 		$(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 \
 		$(OUTDIR)/cv_disp.h5 \
 		$(OUTDIR)/disp.pkl \
 		$(OUTDIR)/sign.pkl
 
-$(OUTDIR)/regressor.pkl $(OUTDIR)/cv_regressor.h5: $(AICT_CONFIG_TRAIN) $(OUTDIR)/dl1_$(GAMMA_FILE)_training_precuts.h5 | $(OUTDIR)
+$(OUTDIR)/regressor.pkl $(OUTDIR)/cv_regressor.h5: $(AICT_CONFIG) $(OUTDIR)/dl1_$(GAMMA_FILE)_training_precuts.h5 | $(OUTDIR)
 	aict_train_energy_regressor \
-		$(AICT_CONFIG_TRAIN) \
+		$(AICT_CONFIG) \
 		$(OUTDIR)/dl1_$(GAMMA_FILE)_training_precuts.h5 \
 		$(OUTDIR)/cv_regressor.h5 \
 		$(OUTDIR)/regressor.pkl
@@ -81,27 +80,23 @@ $(OUTDIR)/dl2_%.h5: $(OBSDIR)/dl1_%.h5 $(OUTDIR)/separator.pkl $(OUTDIR)/disp.pk
 	aict_apply_cuts \
 		$(AICT_CONFIG) \
 		$< \
-		$(OUTDIR)/tempfile.h5 \
-		--chunksize=100000
+		$(OUTDIR)/tempfile.h5
 
 	aict_apply_separation_model \
 		$(AICT_CONFIG) \
 		$(OUTDIR)/tempfile.h5 \
-		$(OUTDIR)/separator.pkl \
-		--chunksize=100000
+		$(OUTDIR)/separator.pkl
 
 	aict_apply_disp_regressor \
 		$(AICT_CONFIG) \
 		$(OUTDIR)/tempfile.h5 \
 		$(OUTDIR)/disp.pkl \
-		$(OUTDIR)/sign.pkl \
-		--chunksize=100000
+		$(OUTDIR)/sign.pkl
 
 	aict_apply_energy_regressor \
 		$(AICT_CONFIG) \
 		$(OUTDIR)/tempfile.h5 \
-		$(OUTDIR)/regressor.pkl \
-		--chunksize=100000
+		$(OUTDIR)/regressor.pkl
 
 	python add_coords.py \
 		$(OUTDIR)/tempfile.h5
@@ -114,23 +109,23 @@ $(OUTDIR)/dl2_%.h5: $(OBSDIR)/dl1_%.h5 $(OUTDIR)/separator.pkl $(OUTDIR)/disp.pk
 	rm -f $(OUTDIR)/tempfile.h5
 
 #performance plots
-$(PLOTS)/regressor_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_regressor.h5 | $(OUTDIR)
+$(PLOTS)/regressor_plots.pdf: $(AICT_CONFIG) $(OUTDIR)/cv_regressor.h5 | $(OUTDIR)
 	aict_plot_regressor_performance \
-		$(AICT_CONFIG_TRAIN) \
+		$(AICT_CONFIG) \
 		$(OUTDIR)/cv_regressor.h5 \
 		$(OUTDIR)/regressor.pkl \
 		-o $@
 
-$(PLOTS)/separator_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_separation.h5 | $(OUTDIR)
+$(PLOTS)/separator_plots.pdf: $(AICT_CONFIG) $(OUTDIR)/cv_separation.h5 | $(OUTDIR)
 	aict_plot_separator_performance \
-		$(AICT_CONFIG_TRAIN) \
+		$(AICT_CONFIG) \
 		$(OUTDIR)/cv_separation.h5 \
 		$(OUTDIR)/separator.pkl \
 		-o $@
 
-$(PLOTS)/disp_plots.pdf: $(AICT_CONFIG_TRAIN) $(OUTDIR)/cv_disp.h5 $(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 | $(OUTDIR)
+$(PLOTS)/disp_plots.pdf: $(AICT_CONFIG) $(OUTDIR)/cv_disp.h5 $(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 | $(OUTDIR)
 	aict_plot_disp_performance \
-		$(AICT_CONFIG_TRAIN) \
+		$(AICT_CONFIG) \
 		$(OUTDIR)/cv_disp.h5 \
 		$(OUTDIR)/dl1_$(GAMMA_DIFFUSE_FILE)_training_precuts.h5 \
 		$(OUTDIR)/disp.pkl \
