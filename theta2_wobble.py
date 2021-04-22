@@ -65,8 +65,8 @@ MAX_BG_RADIUS = 1 * u.deg
 @click.argument('theta2_cut', type=float)
 @click.argument('threshold', type=float)
 @click.option(
-    '--n_offs', type=int, default=5,
-    help='Number of OFF regions (default = 5)'
+    '--n_offs', type=int, default=3,
+    help='Number of OFF regions (default = 3)'
 )
 @click.option(
     '--n_jobs', type=int, default=-1,
@@ -93,10 +93,6 @@ def main(output, data, source, theta2_cut, threshold, n_offs, n_jobs):
     theta = np.concatenate(results[:,2])
     df_selected5 = pd.concat(results[:,3], ignore_index=True)
     theta_off = np.concatenate(results[:,4])
-
-    n_off_test = np.count_nonzero(theta_off.deg**2 < 0.04)
-    n_on_test = np.count_nonzero(theta.deg**2 < 0.04)
-
 
     ##############################################################################################################
     # plots
