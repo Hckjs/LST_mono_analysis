@@ -65,8 +65,8 @@ MAX_BG_RADIUS = 1 * u.deg
 @click.argument('theta2_cut', type=float)
 @click.argument('threshold', type=float)
 @click.option(
-    '--n_offs', type=int, default=5,
-    help='Number of OFF regions (default = 5)'
+    '--n_offs', type=int, default=3,
+    help='Number of OFF regions (default = 3)'
 )
 @click.option(
     '--n_jobs', type=int, default=-1,

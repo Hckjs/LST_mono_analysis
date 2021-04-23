@@ -27,8 +27,8 @@ def main(infile):
     table_pointing = read_table(infile, pointing_key)
     table_trigger = read_table(infile, trigger_key)
     table_disp_pred = read_table(infile, source_pred_key)
+    table_disp_pred.sort('event_id')
     table_gamma_pred = read_table(infile, gamma_pred_key)
-    table_gamma_pred.sort('event_id')
     table_gamma_energy_pred = read_table(infile, gamma_energy_pred_key)
 
     interp_az = np.interp(table_trigger['time'].mjd, table_pointing['time'].mjd, table_pointing['azimuth'])
