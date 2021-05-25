@@ -12,7 +12,7 @@ AICT_CONFIG = config/cta_full_config.yaml
 GAMMA_FILE = gamma_20deg_0deg___$(SIM_VERSION)
 GAMMA_DIFFUSE_FILE = gamma_diffuse_20deg_0deg___$(SIM_VERSION)
 PROTON_FILE = proton_20deg_0deg___$(SIM_VERSION)
-#ELECTRON_FILE = electron_20deg_0deg___$(SIM_VERSION)
+ELECTRON_FILE = electron_20deg_0deg___$(SIM_VERSION)
 
 
 CRAB_RUNS=2992
@@ -30,23 +30,18 @@ all: $(OUTDIR)/cv_separation.h5 \
 	$(OUTDIR)/separator_plots.pdf \
 	$(CRAB_DL2_DVR) \
 	$(CRAB_DL2) \
-    $(OUTDIR)/crab_theta2.pdf \
-    $(OUTDIR)/crab_theta2_dvr.pdf
-#	$(OUTDIR)/dl2_$(GAMMA_FILE)_testing.h5 \
-#	$(OUTDIR)/dl2_$(GAMMA_DIFFUSE_FILE)_testing.h5 \
-#	$(OUTDIR)/dl2_$(PROTON_FILE)_testing.h5 \
-#   $(OUTDIR)/dl2_$(ELECTRON_FILE)_testing.h5 \
-#   $(OUTDIR)/pyirf.fits.gz \
+	$(OUTDIR)/dl2_$(GAMMA_FILE)_testing.h5 \
+	$(OUTDIR)/dl2_$(GAMMA_DIFFUSE_FILE)_testing.h5 \
+	$(OUTDIR)/dl2_$(PROTON_FILE)_testing.h5 \
+	$(OUTDIR)/dl2_$(ELECTRON_FILE)_testing.h5 \
+	$(OUTDIR)/pyirf.fits.gz \
+	$(OUTDIR)/crab_theta2.pdf \
+	$(OUTDIR)/crab_theta2_dvr.pdf
 
 #precuts
 $(OUTDIR)/%_precuts.h5: $(SIMDIR)/%.h5 $(AICT_CONFIG) | $(OUTDIR)
 	aict_apply_cuts \
 		$(AICT_CONFIG) \
-		$< \
-		$@
-
-$(OUTDIR)/dl1_%_testing.h5: $(SIMDIR)/dl1_%_testing.h5 | $(OUTDIR)
-	cp \
 		$< \
 		$@
 
@@ -76,37 +71,58 @@ $(OUTDIR)/regressor.pkl $(OUTDIR)/cv_regressor.h5: $(AICT_CONFIG) $(OUTDIR)/dl1_
 		$(OUTDIR)/regressor.pkl
 
 #apply models
-$(OUTDIR)/dl2_%.h5: $(OBSDIR)/dl1_%.h5 $(OUTDIR)/separator.pkl $(OUTDIR)/disp.pkl $(OUTDIR)/regressor.pkl $(AICT_CONFIG) add_coords.py | $(OUTDIR)
+$(OUTDIR)/dl2_%.h5: $(OBSDIR)/dl1_%.h5 $(OUTDIR)/separator.pkl $(OUTDIR)/disp.pkl $(OUTDIR)/regressor.pkl $(AICT_CONFIG) | $(OUTDIR)
 	aict_apply_cuts \
 		$(AICT_CONFIG) \
 		$< \
-		$(OUTDIR)/tempfile.h5
+		$@ \
+		--chunksize=500000
 
 	aict_apply_separation_model \
 		$(AICT_CONFIG) \
-		$(OUTDIR)/tempfile.h5 \
-		$(OUTDIR)/separator.pkl
+		$@ \
+		$(OUTDIR)/separator.pkl \
+		--chunksize=500000
 
 	aict_apply_disp_regressor \
 		$(AICT_CONFIG) \
-		$(OUTDIR)/tempfile.h5 \
+		$@ \
 		$(OUTDIR)/disp.pkl \
-		$(OUTDIR)/sign.pkl
+		$(OUTDIR)/sign.pkl \
+		--chunksize=500000
 
 	aict_apply_energy_regressor \
 		$(AICT_CONFIG) \
-		$(OUTDIR)/tempfile.h5 \
-		$(OUTDIR)/regressor.pkl
-
-	python add_coords.py \
-		$(OUTDIR)/tempfile.h5
-
-	ptrepack \
-		$(OUTDIR)/tempfile.h5 \
 		$@ \
-		--keep-source-filters
+		$(OUTDIR)/regressor.pkl \
+		--chunksize=500000
 
-	rm -f $(OUTDIR)/tempfile.h5
+#apply models
+$(OUTDIR)/dl2_%_testing.h5: $(SIMDIR)/dl1_%_testing.h5 $(OUTDIR)/separator.pkl $(OUTDIR)/disp.pkl $(OUTDIR)/regressor.pkl $(AICT_CONFIG) | $(OUTDIR)
+	aict_apply_cuts \
+		$(AICT_CONFIG) \
+		$< \
+		$@ \
+		--chunksize=500000
+
+	aict_apply_separation_model \
+		$(AICT_CONFIG) \
+		$@ \
+		$(OUTDIR)/separator.pkl \
+		--chunksize=500000
+
+	aict_apply_disp_regressor \
+		$(AICT_CONFIG) \
+		$@ \
+		$(OUTDIR)/disp.pkl \
+		$(OUTDIR)/sign.pkl \
+		--chunksize=500000
+
+	aict_apply_energy_regressor \
+		$(AICT_CONFIG) \
+		$@ \
+		$(OUTDIR)/regressor.pkl \
+		--chunksize=500000
 
 #performance plots
 $(OUTDIR)/regressor_plots.pdf: $(AICT_CONFIG) $(OUTDIR)/cv_regressor.h5 | $(OUTDIR)
@@ -133,19 +149,21 @@ $(OUTDIR)/disp_plots.pdf: $(AICT_CONFIG) $(OUTDIR)/cv_disp.h5 $(OUTDIR)/dl1_$(GA
 		-o $@
 
 #observations
-$(OUTDIR)/crab_theta2.pdf: theta2_wobble.py plotting.py calculation.py $(CRAB_DL2) | $(OUTDIR)
+$(OUTDIR)/crab_theta2.pdf: theta2_wobble.py plotting.py calculation.py $(OUTDIR)/pyirf.fits.gz $(CRAB_DL2) | $(OUTDIR)
 	python theta2_wobble.py \
 		$(OUTDIR)/crab_theta2.pdf \
 		$(CRAB_DL2) \
 		'Crab' \
+		$(OUTDIR)/pyirf.fits.gz \
 		0.04 \
 		0.80
 
-$(OUTDIR)/crab_theta2_dvr.pdf: theta2_wobble.py plotting.py calculation.py $(CRAB_DL2_DVR) | $(OUTDIR)
+$(OUTDIR)/crab_theta2_dvr.pdf: theta2_wobble.py plotting.py calculation.py $(OUTDIR)/pyirf.fits.gz $(CRAB_DL2_DVR) | $(OUTDIR)
 	python theta2_wobble.py \
 		$(OUTDIR)/crab_theta2_dvr.pdf \
 		$(CRAB_DL2_DVR) \
 		'Crab' \
+		$(OUTDIR)/pyirf.fits.gz \
 		0.04 \
 		0.80
 

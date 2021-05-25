@@ -35,22 +35,21 @@ else:
     from matplotlib.backends.backend_pdf import PdfPages
 
 
-
 COLUMN_MAP = {
     'obs_id': 'obs_id',
     'event_id': 'event_id',
     'gamma_energy_prediction': 'reco_energy',
-    'source_alt_prediction': 'reco_alt',
-    'source_az_prediction': 'reco_az',
-    'alt_tel': 'pointing_alt',
-    'az_tel': 'pointing_az',
+    'alt_prediction': 'reco_alt',
+    'az_prediction': 'reco_az',
+    'altitude': 'pointing_alt',
+    'azimuth': 'pointing_az',
     'gammaness': 'gh_score',
 }
 
 UNIT_MAP = {
     'reco_energy': u.TeV,
-    'reco_alt': u.rad,
-    'reco_az': u.rad,
+    'reco_alt': u.deg,
+    'reco_az': u.deg,
     'pointing_alt': u.rad,
     'pointing_az': u.rad
 }
@@ -62,6 +61,7 @@ MAX_BG_RADIUS = 1 * u.deg
 @click.argument('output', type=click.Path(exists=False, dir_okay=False))
 @click.argument('data', nargs=-1, type=click.Path(exists=True, dir_okay=False))
 @click.argument('source', type=str)
+@click.argument('cuts_file', type=click.Path(exists=True, dir_okay=False))
 @click.argument('theta2_cut', type=float)
 @click.argument('threshold', type=float)
 @click.option(
@@ -72,7 +72,7 @@ MAX_BG_RADIUS = 1 * u.deg
     '--n_jobs', type=int, default=-1,
     help='Number of processors used (default = -1)'
 )
-def main(output, data, source, theta2_cut, threshold, n_offs, n_jobs):
+def main(output, data, source, cuts_file, theta2_cut, threshold, n_offs, n_jobs):
     outdir = output.split('/')[0]
 
     src = SkyCoord.from_name(source)
@@ -94,6 +94,39 @@ def main(output, data, source, theta2_cut, threshold, n_offs, n_jobs):
     df_selected5 = pd.concat(results[:,3], ignore_index=True)
     theta_off = np.concatenate(results[:,4])
 
+
+    # use pyirf cuts
+    gh_cuts = table.QTable.read(cuts_file, hdu='GH_CUTS')
+    theta_cuts_opt = table.QTable.read(cuts_file, hdu='THETA_CUTS_OPT')
+    
+    with Pool(n_jobs) as pool:
+        results = np.array(
+            pool.starmap(
+                calculation.read_run_calculate_thetas, 
+                [(run, gh_cuts, src, n_offs) for run in data]
+            ), dtype=object
+        )
+
+    df_pyirf = pd.concat(results[:,0], ignore_index=True)
+    theta_pyirf = np.concatenate(results[:,2])
+    df_pyirf5 = pd.concat(results[:,3], ignore_index=True)
+    theta_off_pyirf = np.concatenate(results[:,4])
+
+    n_on = np.count_nonzero(
+        evaluate_binned_cut(
+            theta_pyirf, df_pyirf.gamma_energy_prediction.to_numpy() * u.TeV, theta_cuts_opt, operator.le
+        )
+    )
+    n_off = np.count_nonzero(
+        evaluate_binned_cut(
+            theta_off_pyirf, df_pyirf5.gamma_energy_prediction.to_numpy() * u.TeV, theta_cuts_opt, operator.le
+        )
+    )
+    li_ma = li_ma_significance(n_on, n_off, 1/n_offs)
+    n_exc_mean = n_on - (1/n_offs) * n_off
+    n_exc_std = np.sqrt(n_on + (1/n_offs)**2 * n_off)
+
+
     ##############################################################################################################
     # plots
     ##############################################################################################################
@@ -108,8 +141,8 @@ def main(output, data, source, theta2_cut, threshold, n_offs, n_jobs):
         source, ontime=ontime,
         ax=ax
     )
-    #ax.set_title('Theta calculated in ICRS using astropy')
-    """
+    ax.set_title('Theta calculated in ICRS using astropy')
+
     figures.append(plt.figure())
     ax = figures[-1].add_subplot(1, 1, 1)
     plotting.theta2(
@@ -264,7 +297,7 @@ def main(output, data, source, theta2_cut, threshold, n_offs, n_jobs):
 
     ax.set_title(f'Minimal Flux Satisfying Requirements for 50 hours \n(based on {ontime.to_value(u.hour):.2f}h of {source} observations)')
 
-    """
+
     # save plots
     with PdfPages(output) as pdf:
         for fig in figures:

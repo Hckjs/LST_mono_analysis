@@ -5,7 +5,8 @@ import numpy as np
 from astropy import table
 import astropy.units as u
 from astropy.io import fits
-from fact.io import read_h5py
+import pandas as pd
+from ctapipe.io import read_table
 
 from pyirf.simulations import SimulatedEventsInfo
 from pyirf.binning import (
@@ -24,6 +25,7 @@ from pyirf.spectral import (
     CRAB_HEGRA,
     IRFDOC_PROTON_SPECTRUM,
     IRFDOC_ELECTRON_SPECTRUM,
+    DAMPE_P_He_SPECTRUM,
 )
 from pyirf.cut_optimization import optimize_gh_cut
 
@@ -46,7 +48,6 @@ import click
 
 
 log = logging.getLogger(__name__)
-
 
 COLUMN_MAP = {
     "obs_id": "obs_id",
@@ -85,26 +86,56 @@ GH_CUT_EFFICIENCY_STEP = 0.01
 # gh cut used for first calculation of the binned theta cuts
 INITIAL_GH_CUT_EFFICENCY = 0.4
 
+pointing_key = '/dl1/monitoring/telescope/pointing/tel_001'
+shower_key = '/simulation/event/subarray/shower'
+source_pred_key = '/dl2/event/telescope/disp_prediction/tel_001'
+gamma_pred_key = '/dl2/event/telescope/gamma_prediction/tel_001'
+gamma_energy_pred_key = '/dl2/event/telescope/gamma_energy_prediction/tel_001'
+sim_run_key = '/configuration/simulation/run'
 
 def read_file(infile):
     log.debug(f"Reading {infile}")
-    events = read_h5py(infile, key='events', columns=list(COLUMN_MAP.keys()))
-    sim_runs = read_h5py(infile, key='corsika_runs')
 
-    events.rename(columns=COLUMN_MAP, inplace=True)
+    table_pointing = read_table(infile, pointing_key)
+    table_shower = read_table(infile, shower_key)
+    table_disp_pred = read_table(infile, source_pred_key)
+    table_gamma_pred = read_table(infile, gamma_pred_key)
+    table_gamma_energy_pred = read_table(infile, gamma_energy_pred_key)
+    table_sim_run = read_table(infile, sim_run_key)
+
+    df = pd.DataFrame()
+    df['obs_id'] = table_disp_pred['obs_id']
+    df['event_id'] = table_disp_pred['event_id']
+    df['reco_energy'] = table_gamma_energy_pred['gamma_energy_prediction']
+    df['reco_alt'] = np.deg2rad(table_disp_pred['alt_prediction'])
+    df['reco_az'] = np.deg2rad(table_disp_pred['az_prediction'])
+    df['pointing_alt'] = table_pointing['altitude'][0] * np.ones(len(df))
+    df['pointing_az'] = table_pointing['azimuth'][0] * np.ones(len(df))
+    df['true_alt'] = np.deg2rad(table_shower['true_alt'][0]) * np.ones(len(df))
+    df['true_az'] = np.deg2rad(table_shower['true_az'][0]) * np.ones(len(df))
+    df['gh_score'] = table_gamma_pred['gamma_prediction']
+
+    obs_ids = list(dict.fromkeys(df['obs_id'].values))
+    df_temp_1 = pd.DataFrame()
+    for oid in obs_ids:
+        df_temp_2 = pd.DataFrame()
+        df_temp_2['true_energy'] = table_shower[table_shower['obs_id'] == oid]['true_energy']
+        df_temp_1 = df_temp_1.append(df_temp_2, ignore_index=True, sort=False)
+
+    df['true_energy'] = df_temp_1['true_energy']
     
-    n_showers = np.sum(sim_runs.num_showers * sim_runs.shower_reuse)
+    n_showers = np.sum(table_sim_run['num_showers'] * table_sim_run['shower_reuse'])
     log.debug(f"Number of events from corsika_runs: {n_showers}")
 
     sim_info = SimulatedEventsInfo(
         n_showers=n_showers,
-        energy_min=u.Quantity(sim_runs["energy_range_min"][0], u.TeV),
-        energy_max=u.Quantity(sim_runs["energy_range_max"][0], u.TeV),
-        max_impact=u.Quantity(sim_runs["max_scatter_range"][0], u.m),
-        spectral_index=sim_runs["spectral_index"][0],
-        viewcone=u.Quantity(sim_runs["max_viewcone_radius"][0] - sim_runs["min_viewcone_radius"][0], u.deg),
+        energy_min=u.Quantity(table_sim_run["energy_range_min"][0], u.TeV),
+        energy_max=u.Quantity(table_sim_run["energy_range_max"][0], u.TeV),
+        max_impact=u.Quantity(table_sim_run["max_scatter_range"][0], u.m),
+        spectral_index=table_sim_run["spectral_index"][0],
+        viewcone=u.Quantity(table_sim_run["max_viewcone_radius"][0] - table_sim_run["min_viewcone_radius"][0], u.deg),
     )
-    return table.QTable.from_pandas(events, units=UNIT_MAP), sim_info
+    return table.QTable.from_pandas(df, units=UNIT_MAP), sim_info
 
 
 @click.command()
@@ -152,14 +183,15 @@ def main(gammafile, protonfile, electronfile, outputfile):
         [particles["proton"]["events"], particles["electron"]["events"]]
     )
 
-    # calculate theta / distance between reco and assuemd source position
+    # calculate theta / distance between reco and assumed source position
     gammas["theta"] = calculate_theta(
         gammas,
         assumed_source_az=gammas["true_az"],
         assumed_source_alt=gammas["true_alt"],
     )
 
-    INITIAL_GH_CUT = np.quantile(gammas['gh_score'], (1 - INITIAL_GH_CUT_EFFICENCY))
+    INITIAL_GH_CUT = np.nanquantile(np.array(gammas['gh_score']), (1 - INITIAL_GH_CUT_EFFICENCY))
+
     log.info(f"Using fixed G/H cut of {INITIAL_GH_CUT} to calculate theta cuts")
 
     theta_bins = add_overflow_bins(
@@ -175,7 +207,9 @@ def main(gammafile, protonfile, electronfile, outputfile):
 
     # theta cut is 68 percent containmente of the gammas
     # for now with a fixed global, unoptimized score cut
+
     mask_theta_cuts = gammas["gh_score"] >= INITIAL_GH_CUT
+
     theta_cuts = calculate_percentile_cut(
         gammas["theta"][mask_theta_cuts],
         gammas["reco_energy"][mask_theta_cuts],
