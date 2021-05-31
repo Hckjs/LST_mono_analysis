@@ -1,0 +1,45 @@
+{
+    "DL1Writer": {
+        "overwrite": true,
+        "write_images": true,
+        "write_parameters": true
+    },
+    "LSTEventSource": {
+      "LSTR0Corrections": {
+        "drs4_pedestal_path": "/fefs/aswg/data/real/calibration/20201121/v05/drs4_pedestal.Run2983.0000.fits",
+        "drs4_time_calibration_path": "/fefs/aswg/data/real/calibration/20201121/v05/time_calibration.Run2984.0000.hdf5",
+        "calibration_path": "/fefs/aswg/data/real/calibration/20201121/v05/calibration.Run2984.0000.hdf5",
+        "gain_selection_threshold": 3500,
+        "add_calibration_timeshift": true
+      },
+      "PointingSource": {
+        "drive_report_path": "/fefs/aswg/data/real/monitoring/DrivePositioning/drive_log_20_11_21.txt"
+      },
+      "EventTimeCalculator": {
+        "run_summary_path": "/fefs/aswg/data/real/monitoring/RunSummary/RunSummary_20201121.ecsv"
+      }
+    },
+    "CameraCalibrator": {
+        "image_extractor_type": "LocalPeakWindowSum",
+        "LocalPeakWindowSum": {
+            "window_shift": 4,
+            "window_width": 8,
+            "apply_integration_correction": false
+        }
+    },
+    "ImageProcessor": {
+        "image_cleaner_type": "TailcutsImageCleaner",
+        "TailcutsImageCleaner": {
+            "picture_threshold_pe": 8,
+            "boundary_threshold_pe": 4,
+            "keep_isolated_pixels": false,
+            "min_picture_neighbors": 1
+        },
+        "ImageQualityQuery": {
+            "quality_criteria": [
+                ["enough_pixels", "lambda im: np.count_nonzero(im) > 2"],
+                ["enough_charge", "lambda im: im.sum() > 50"]
+            ]
+        }
+    }
+}

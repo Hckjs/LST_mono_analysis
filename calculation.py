@@ -6,6 +6,9 @@ import pandas as pd
 
 from pyirf.cuts import evaluate_binned_cut
 
+from ctapipe.io import read_table
+from ctapipe.coordinates import CameraFrame
+
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, SkyOffsetFrame, AltAz, EarthLocation
 import astropy.units as u
@@ -15,6 +18,13 @@ from astropy.coordinates.erfa_astrom import erfa_astrom, ErfaAstromInterpolator
 
 
 erfa_astrom.set(ErfaAstromInterpolator(10 * u.min))
+location = EarthLocation.from_geodetic(-17.89139 * u.deg, 28.76139 * u.deg, 2184 * u.m)
+
+pointing_key = '/dl1/monitoring/telescope/pointing/tel_001'
+trigger_key = '/dl1/event/telescope/trigger'
+source_pred_key = '/dl2/event/telescope/disp_prediction/tel_001'
+gamma_pred_key = '/dl2/event/telescope/gamma_prediction/tel_001'
+gamma_energy_pred_key = '/dl2/event/telescope/gamma_energy_prediction/tel_001'
 
 
 def calc_ontime(time):
@@ -41,7 +51,31 @@ def calc_theta_off(source_coord: SkyCoord, reco_coord: SkyCoord, pointing_coord:
 
 def read_run_calculate_thetas(run, threshold, source: SkyCoord, n_offs):
 
-    df = pd.read_hdf(run, key = '/dl2/event/telescope/tel_001/table')
+    table_pointing = read_table(run, pointing_key)
+    table_trigger = read_table(run, trigger_key)
+    table_disp_pred = read_table(run, source_pred_key)
+    table_gamma_pred = read_table(run, gamma_pred_key)
+    table_gamma_energy_pred = read_table(run, gamma_energy_pred_key)
+
+    interp_az = np.interp(table_trigger['time'].mjd, table_pointing['time'].mjd, table_pointing['azimuth'])
+    interp_alt = np.interp(table_trigger['time'].mjd, table_pointing['time'].mjd, table_pointing['altitude'])
+
+    columns = [
+        table_disp_pred['obs_id'],
+        table_disp_pred['event_id'],
+        table_disp_pred['alt_prediction'],
+        table_disp_pred['az_prediction'],
+        table_disp_pred['disp_prediction'],
+        table_gamma_pred['gamma_prediction'],
+        table_gamma_energy_pred['gamma_energy_prediction']
+    ]
+
+    df = pd.DataFrame()
+    df['time'] = table_trigger['time'].mjd
+    df['azimuth'] = interp_az
+    df['altitude'] = interp_alt
+    for col in columns:
+        df[col.name] = col
 
     t = Time(df.time, format='mjd', scale='tai')
     t.format = 'unix'
@@ -49,23 +83,30 @@ def read_run_calculate_thetas(run, threshold, source: SkyCoord, n_offs):
 
     if type(threshold) == float:
         df_selected = df.query(f'gamma_prediction > {threshold}')
+
     else:
         df['selected_gh'] = evaluate_binned_cut(
             df.gamma_prediction.to_numpy(), df.gamma_energy_prediction.to_numpy() * u.TeV, threshold, operator.ge
         )
         df_selected = df.query('selected_gh')
 
-    pointing_icrs = SkyCoord(
-        df_selected.pointing_ra.values * u.rad,
-        df_selected.pointing_dec.values * u.rad,
-        frame='icrs'
+    t_selected = Time(df_selected.time, format='mjd', scale='tai')
+    t_selected.format = 'unix'
+    altaz = AltAz(obstime=t_selected, location=location)
+
+    pointing_altaz = SkyCoord(
+        alt=u.Quantity(df_selected.altitude.values, u.rad, copy=False),
+        az=u.Quantity(df_selected.azimuth.values, u.rad, copy=False),
+        frame=altaz,
+    )
+    prediction_altaz = SkyCoord(
+        alt=u.Quantity(df_selected.alt_prediction.values, u.deg, copy=False),
+        az=u.Quantity(df_selected.az_prediction.values, u.deg, copy=False),
+        frame=altaz,
     )
 
-    prediction_icrs = SkyCoord(
-        df_selected.source_ra_prediction.values * u.rad, 
-        df_selected.source_dec_prediction.values * u.rad, 
-        frame='icrs'
-    )
+    pointing_icrs = pointing_altaz.transform_to('icrs')
+    prediction_icrs = prediction_altaz.transform_to('icrs')
 
     theta, theta_off = calc_theta_off(
         source_coord=source,
