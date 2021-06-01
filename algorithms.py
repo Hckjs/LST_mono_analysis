@@ -57,23 +57,23 @@ class DataVolumeReduction():
 
     def tailcuts_dvr(self, image, config):
         tc_mask = tailcuts(image, self.camera_geom, config)
-        mask = infect_pixel_charge(image, tc_mask, self.camera_geom, config)
-        mask = dilates_at_end(mask, self.camera_geom, config)
+        mask_infect = infect_pixel_charge(image, tc_mask, self.camera_geom, config)
+        mask_dilate = dilates_at_end(mask_infect, self.camera_geom, config)
 
-        return mask
+        return tc_mask, mask_infect, mask_dilate
 
     def peak_time_dvr(self, image, peak_time, config):
         tc_mask = tailcuts(image, self.camera_geom, config)
-        mask = infect_peak_time(peak_time, tc_mask, self.camera_geom, config)
-        mask = dilates_at_end(mask, self.camera_geom, config)
+        mask_infect = infect_peak_time(peak_time, tc_mask, self.camera_geom, config)
+        mask_dilate = dilates_at_end(mask_infect, self.camera_geom, config)
 
-        return mask
+        return tc_mask, mask_infect, mask_dilate
 
     def mixed_dvr(self, image, peak_time, config):
         tc_mask = tailcuts(image, self.camera_geom, config)
         mask_peak_time = infect_peak_time(peak_time, tc_mask, self.camera_geom, config)
         mask_charge = infect_pixel_charge(image, tc_mask, self.camera_geom, config)
-        mask = mask_peak_time | mask_charge
-        mask = dilates_at_end(mask, self.camera_geom, config)
+        mask_infect = mask_peak_time | mask_charge
+        mask_dilate = dilates_at_end(mask_infect, self.camera_geom, config)
 
-        return mask
+        return tc_mask, mask_infect, mask_dilate

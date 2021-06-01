@@ -4,7 +4,8 @@ import sys
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import astropy.units as u
-import tables as tb
+from tables import *
+import pandas as pd
 import numpy as np
 
 from algorithms import DataVolumeReduction
@@ -43,19 +44,18 @@ DEFAULT_PEAKTIME_STATISTICS = PeakTimeStatisticsContainer()
 #Config
 config_dvr={
     'volume_reducer':'ptdvr',
-    'picture_threshold_pe':10.0,
-    'boundary_threshold_pe':5.0,
+    'picture_threshold_pe':8.0,
+    'boundary_threshold_pe':4.0,
     'min_picture_neighbors':1,
     'keep_isolated_pixels':False,
     'n_end_dilates':1,
     'min_number_neighbors':1,
     'time_limit':1.5,
-    'sigma_thresh':2.5
 }
 
 config_cleaning={
-    'picture_threshold_pe':10.0,
-    'boundary_threshold_pe':5.0,
+    'picture_threshold_pe':8.0,
+    'boundary_threshold_pe':4.0,
     'min_picture_neighbors':1,
     'keep_isolated_pixels':False
 }
@@ -66,8 +66,14 @@ config_quality_criteria = [
 ]
 
 ped_len = 100
-image_scale = 10.0
-peak_time_scale = 100.0
+image_scale = 1
+peak_time_scale = 1
+
+class table_masks(IsDescription):
+    mask_tc = BoolCol(shape=(1855,))
+    mask_infect = BoolCol(shape=(1855,))
+    mask_dilate = BoolCol(shape=(1855,))
+    event_id = Int64Col()
 
 def parameterize_image(check_image, image, signal_pixels, geometry, peak_time=None):
     image_selected = image[signal_pixels]
@@ -135,11 +141,12 @@ def calc_first_pedestal_thresh(file, sigma_thresh, ped_len):
 
 @click.command()
 @click.argument('filename', type=click.Path(exists=True, dir_okay=False))
-def main(filename):
+@click.argument('filename_masks', type=click.Path(exists=False, dir_okay=False))
+def main(filename, filename_masks):
     subarray = SubarrayDescription.from_hdf(filename)
     ped_counter = 0
 
-    with tb.open_file(filename, mode='a') as output_file:
+    with open_file(filename, mode='a') as output_file:
         camera_geom = subarray.tel[1].camera.geometry
         image_nodepath = '/dl1/event/telescope/images/tel_001'
         parameters_nodepath = '/dl1/event/telescope/parameters/tel_001'
@@ -156,79 +163,95 @@ def main(filename):
 
         volume_reducer = DataVolumeReduction(camera_geom=camera_geom)
 
-        for i, (row_image, row_parameters) in enumerate(
-            tqdm(
-                zip(image_table, parameters_table),
-                desc="Processing",
-                unit=" image"
-            )
-        ):
-            image = row_image['image'].copy()
-            peak_time = row_image['peak_time'].copy()
+        with open_file(filename_masks, mode='a') as output_file_masks:
 
-            image_transf = image / image_scale
-            peak_time_transf = peak_time / peak_time_scale
+            output_masks_table = output_file_masks.create_table('/masks', 'masks_table', table_masks, createparents=True)
+            output_masks_row = output_masks_table.row
 
-            """
-            if output_file.root[trigger_nodepath][i]['event_type'] == 2:
-                if ped_counter < ped_len:
-                    ped_counter += 1
-                    continue
-                else:
-                    ped_images = np.delete(ped_images, 0, 0)
-                    ped_images = np.vstack((ped_images, image))
-                    pedestal_thresh = get_pedestal_thresh(ped_images,
-                                                          config_dvr['sigma_thresh'])
-                    continue
-            """
-            if output_file.root[trigger_nodepath][i]['event_type'] != 32:
-                continue
-            """
-            config_dvr['picture_threshold_pe'] = np.maximum(
-                config_cleaning['picture_threshold_pe'],
-                pedestal_thresh
-            )
-            """
-            if config_dvr['volume_reducer'] == 'tcdvr':
-                dvr_mask = volume_reducer.tailcuts_dvr(image_transf, config_dvr)
-            if config_dvr['volume_reducer'] == 'ptdvr':
-                dvr_mask = volume_reducer.peak_time_dvr(image_transf, peak_time_transf, config_dvr)
-            if config_dvr['volume_reducer'] == 'mixeddvr':
-                dvr_mask = volume_reducer.mixed_dvr(image_transf, peak_time_transf, config_dvr)
+            for i, (row_image, row_parameters) in enumerate(
+                tqdm(
+                    zip(image_table, parameters_table),
+                    desc="Processing",
+                    unit=" image"
+                )
+            ):
+                image = row_image['image'].copy()
+                peak_time = row_image['peak_time'].copy()
 
-            image[~dvr_mask] = 0
-            peak_time[~dvr_mask] = 0
+                image_transf = image / image_scale
+                peak_time_transf = peak_time / peak_time_scale
 
-            cleaning_mask = tailcuts_clean(
-                geom=camera_geom,
-                image=(image / image_scale),
-                picture_thresh=config_cleaning['picture_threshold_pe'],
-                boundary_thresh=config_cleaning['boundary_threshold_pe'],
-                keep_isolated_pixels=config_cleaning['keep_isolated_pixels'],
-                min_number_picture_neighbors=config_cleaning['min_picture_neighbors']
-            )
-
-            parameter_container = parameterize_image(
-                check_image=check_image,
-                image=(image / image_scale),
-                signal_pixels=cleaning_mask,
-                geometry=camera_geom,
-                peak_time=(peak_time / peak_time_scale)
-            )
-
-            row_image['image'] = image
-            row_image['peak_time'] = peak_time
-            row_image['image_mask'] = cleaning_mask
-
-            for container in parameter_container.values():
-                for colname, value in container.items(add_prefix=True):
-                    if colname in {'hillas_psi', 'hillas_phi'}:
-                        row_parameters[colname] = np.rad2deg(u.Quantity(value).value)
+                """
+                if output_file.root[trigger_nodepath][i]['event_type'] == 2:
+                    if ped_counter < ped_len:
+                        ped_counter += 1
+                        continue
                     else:
-                        row_parameters[colname] = u.Quantity(value).value
+                        ped_images = np.delete(ped_images, 0, 0)
+                        ped_images = np.vstack((ped_images, image))
+                        pedestal_thresh = get_pedestal_thresh(ped_images,
+                                                              config_dvr['sigma_thresh'])
+                        continue
+                """
+                if output_file.root[trigger_nodepath][i]['event_type'] != 32:
+                    continue
+                """
+                config_dvr['picture_threshold_pe'] = np.maximum(
+                    config_cleaning['picture_threshold_pe'],
+                    pedestal_thresh
+                )
+                """
+                if config_dvr['volume_reducer'] == 'tcdvr':
+                    dvr_mask_tc, dvr_mask_infect, dvr_mask_dilate = volume_reducer.tailcuts_dvr(
+                        image_transf, config_dvr)
+                if config_dvr['volume_reducer'] == 'ptdvr':
+                    dvr_mask_tc, dvr_mask_infect, dvr_mask_dilate = volume_reducer.peak_time_dvr(
+                        image_transf, peak_time_transf, config_dvr)
+                if config_dvr['volume_reducer'] == 'mixeddvr':
+                    dvr_mask_tc, dvr_mask_infect, dvr_mask_dilate = volume_reducer.mixed_dvr(
+                        image_transf, peak_time_transf, config_dvr)
 
-            row_image.update()
-            row_parameters.update()
+                image[~dvr_mask_dilate] = 0
+                peak_time[~dvr_mask_dilate] = 0
+
+                cleaning_mask = tailcuts_clean(
+                    geom=camera_geom,
+                    image=(image / image_scale),
+                    picture_thresh=config_cleaning['picture_threshold_pe'],
+                    boundary_thresh=config_cleaning['boundary_threshold_pe'],
+                    keep_isolated_pixels=config_cleaning['keep_isolated_pixels'],
+                    min_number_picture_neighbors=config_cleaning['min_picture_neighbors']
+                )
+
+                parameter_container = parameterize_image(
+                    check_image=check_image,
+                    image=(image / image_scale),
+                    signal_pixels=cleaning_mask,
+                    geometry=camera_geom,
+                    peak_time=(peak_time / peak_time_scale)
+                )
+
+                row_image['image'] = image
+                row_image['peak_time'] = peak_time
+                row_image['image_mask'] = cleaning_mask
+
+                output_masks_row['event_id'] = row_image['event_id']
+                output_masks_row['mask_tc'] = dvr_mask_tc
+                output_masks_row['mask_infect'] = dvr_mask_infect
+                output_masks_row['mask_dilate'] = dvr_mask_dilate
+                output_masks_row.append()
+
+                for container in parameter_container.values():
+                    for colname, value in container.items(add_prefix=True):
+                        if colname in {'hillas_psi', 'hillas_phi'}:
+                            row_parameters[colname] = np.rad2deg(u.Quantity(value).value)
+                        else:
+                            row_parameters[colname] = u.Quantity(value).value
+
+                row_image.update()
+                row_parameters.update()
+
+            output_masks_table.flush()
 
         image_table.flush()
         parameters_table.flush()
