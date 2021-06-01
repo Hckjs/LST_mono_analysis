@@ -1,8 +1,6 @@
 OUTDIR = /fefs/aswg/workspace/jonas.hackfeld/build
 PLOTS = plots
 
-SIM_VERSION= cta-prod5-paranal_desert-2147m-Paranal-dark_merged
-
 OBSDIR = /fefs/aswg/workspace/jonas.hackfeld/masterarbeit/obs/crab/20201121/tailcuts_8_4
 SIMDIR = /fefs/aswg/workspace/jonas.hackfeld/masterarbeit/mc/ctapipe/merged_all
 
@@ -10,10 +8,10 @@ SIMDIR = /fefs/aswg/workspace/jonas.hackfeld/masterarbeit/mc/ctapipe/merged_all
 AICT_CONFIG = config/cta_full_config.yaml
 
 
-GAMMA_FILE = gamma_20deg_0deg___$(SIM_VERSION)
-GAMMA_DIFFUSE_FILE = gamma_diffuse_20deg_0deg___$(SIM_VERSION)
-PROTON_FILE = proton_20deg_0deg___$(SIM_VERSION)
-ELECTRON_FILE = electron_20deg_0deg___$(SIM_VERSION)
+GAMMA_FILE = gamma_trans80_tc_8_4
+GAMMA_DIFFUSE_FILE = gamma_diffuse_trans80_tc_8_4
+PROTON_FILE = proton_trans80_tc_8_4
+ELECTRON_FILE = electron_trans80_tc_8_4
 
 
 CRAB_RUNS=2988 2989 2990 2991 2992
