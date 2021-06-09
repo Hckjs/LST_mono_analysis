@@ -16,16 +16,16 @@ ELECTRON_FILE = electron_trans80_tc_8_4
 
 CRAB_RUNS=2988 2989 2990 2991 2992
 
-CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_transf_LST-1.Run0, $(CRAB_RUNS)))
-CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_transf_LST-1.Run0, $(CRAB_RUNS)))
+CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_LST-1.Run0, $(CRAB_RUNS)))
+CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_LST-1.Run0, $(CRAB_RUNS)))
 
 
 all: $(OUTDIR)/cv_separation.h5 \
 	$(OUTDIR)/cv_disp.h5 \
 	$(OUTDIR)/cv_regressor.h5 \
-	$(OUTDIR)/regressor_plots.pdf \
-	$(OUTDIR)/disp_plots.pdf \
-	$(OUTDIR)/separator_plots.pdf \
+	$(PLOTS)/regressor_plots.pdf \
+	$(PLOTS)/disp_plots.pdf \
+	$(PLOTS)/separator_plots.pdf \
 	$(CRAB_DL2_DVR) \
 	$(CRAB_DL2) \
 	$(OUTDIR)/dl2_$(GAMMA_FILE)_testing.h5 \
@@ -33,8 +33,8 @@ all: $(OUTDIR)/cv_separation.h5 \
 	$(OUTDIR)/dl2_$(PROTON_FILE)_testing.h5 \
 	$(OUTDIR)/dl2_$(ELECTRON_FILE)_testing.h5 \
 	$(OUTDIR)/pyirf.fits.gz \
-	$(OUTDIR)/crab_theta2.pdf \
-	$(OUTDIR)/crab_theta2_dvr.pdf
+	$(PLOTS)/crab_theta2.pdf \
+	$(PLOTS)/crab_theta2_dvr.pdf
 
 #precuts
 $(OUTDIR)/%_precuts.h5: $(SIMDIR)/%.h5 $(AICT_CONFIG) | $(OUTDIR)
@@ -150,21 +150,21 @@ $(PLOTS)/disp_plots.pdf: $(AICT_CONFIG) $(OUTDIR)/cv_disp.h5 $(OUTDIR)/dl1_$(GAM
 #observations
 $(PLOTS)/crab_theta2.pdf: theta2_wobble.py plotting.py calculation.py $(OUTDIR)/pyirf.fits.gz $(CRAB_DL2) | $(OUTDIR)
 	python theta2_wobble.py \
-		$(OUTDIR)/crab_theta2.pdf \
+		$@ \
 		$(CRAB_DL2) \
 		'Crab' \
 		$(OUTDIR)/pyirf.fits.gz \
 		0.04 \
-		0.80
+		0.60
 
 $(PLOTS)/crab_theta2_dvr.pdf: theta2_wobble.py plotting.py calculation.py $(OUTDIR)/pyirf.fits.gz $(CRAB_DL2_DVR) | $(OUTDIR)
 	python theta2_wobble.py \
-		$(OUTDIR)/crab_theta2_dvr.pdf \
+		$@ \
 		$(CRAB_DL2_DVR) \
 		'Crab' \
 		$(OUTDIR)/pyirf.fits.gz \
 		0.04 \
-		0.80
+		0.60
 
 #pyirf sensitivity 
 $(OUTDIR)/pyirf.fits.gz: pyirf_sensitivity.py $(OUTDIR)/dl2_$(GAMMA_FILE)_testing.h5 $(OUTDIR)/dl2_$(PROTON_FILE)_testing.h5 $(OUTDIR)/dl2_$(ELECTRON_FILE)_testing.h5 | $(OUTDIR)
