@@ -25,7 +25,6 @@ from pyirf.spectral import (
     CRAB_HEGRA,
     IRFDOC_PROTON_SPECTRUM,
     IRFDOC_ELECTRON_SPECTRUM,
-    DAMPE_P_He_SPECTRUM,
 )
 from pyirf.cut_optimization import optimize_gh_cut
 

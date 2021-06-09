@@ -1,18 +1,16 @@
 OUTDIR = build
 
-SIM_VERSION= cta-prod5-paranal_desert-2147m-Paranal-dark_merged
-
-OBSDIR = /home/jonas/aktuell/workb/dvr_test/data/crab/DL1/lpws
-SIMDIR = /home/jonas/aktuell/workb/dvr_test/data/mc/prod5/ctapipe
+OBSDIR = /home/jonas/aktuell/workb/dvr_test/data/crab/DL1/ctapipe
+SIMDIR = /home/jonas/Leben/Studium/Masterarbeit/data/mc/ctapipe/rf
 
 
 AICT_CONFIG = config/cta_full_config.yaml
 
 
-GAMMA_FILE = gamma_20deg_0deg___$(SIM_VERSION)
-GAMMA_DIFFUSE_FILE = gamma_diffuse_20deg_0deg___$(SIM_VERSION)
-PROTON_FILE = proton_20deg_0deg___$(SIM_VERSION)
-ELECTRON_FILE = electron_20deg_0deg___$(SIM_VERSION)
+GAMMA_FILE = gamma_trans80_tc_8_4
+GAMMA_DIFFUSE_FILE = gamma_diffuse_trans80_tc_8_4
+PROTON_FILE = proton_trans80_tc_8_4
+ELECTRON_FILE = electron_trans80_tc_8_4
 
 
 CRAB_RUNS=2992

@@ -20,7 +20,7 @@ telescopes:
 selection:
     - hillas_intensity:
       - '>='  # needs to be in quotes because > and ! are special character in yaml
-      - 100
+      - 50
     - leakage_intensity_width_1:
       - <
       - 0.2
@@ -52,7 +52,7 @@ disp:
   output_name: disp_prediction
 
   # randomly sample the data if you dont want to use the whole set
-  n_signal : 200000
+  n_signal : 300000
   features:
     - hillas_length
     - hillas_width
@@ -85,7 +85,7 @@ energy:
     )
 
   # randomly sample the data if you dont want to use the whole set
-  n_signal: 200000
+  n_signal: 300000
 
 
   # Define the name of the variable you want estimate by regression.
@@ -130,8 +130,8 @@ separator:
     )
 
   # randomly sample the data if you dont want to use the whole set
-  n_background: 200000
-  n_signal: 200000
+  n_background: 300000
+  n_signal: 300000
 
   # Define the name of the variable you want estimate by regression.
   # This the name of the group containing the predictions aswell as the column name in the CTA case
