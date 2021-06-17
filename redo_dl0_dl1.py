@@ -44,18 +44,18 @@ DEFAULT_PEAKTIME_STATISTICS = PeakTimeStatisticsContainer()
 #Config
 config_dvr={
     'volume_reducer':'ptdvr',
-    'picture_threshold_pe':8.0,
-    'boundary_threshold_pe':4.0,
+    'picture_threshold_pe':10.0,
+    'boundary_threshold_pe':5.0,
     'min_picture_neighbors':1,
     'keep_isolated_pixels':False,
     'n_end_dilates':1,
     'min_number_neighbors':1,
-    'time_limit':1.5,
+    'time_limit':2.0,
 }
 
 config_cleaning={
-    'picture_threshold_pe':8.0,
-    'boundary_threshold_pe':4.0,
+    'picture_threshold_pe':10.0,
+    'boundary_threshold_pe':5.0,
     'min_picture_neighbors':1,
     'keep_isolated_pixels':False
 }
@@ -165,7 +165,13 @@ def main(filename, filename_masks):
 
         with open_file(filename_masks, mode='a') as output_file_masks:
 
-            output_masks_table = output_file_masks.create_table('/masks', 'masks_table', table_masks, createparents=True)
+            filters = Filters(
+                complevel=5,
+                complib="blosc:zstd",
+                fletcher32=True,
+                )
+            output_masks_table = output_file_masks.create_table('/masks',
+                'masks_table', table_masks, createparents=True, filters=filters)
             output_masks_row = output_masks_table.row
 
             for i, (row_image, row_parameters) in enumerate(
@@ -217,10 +223,10 @@ def main(filename, filename_masks):
                 cleaning_mask = tailcuts_clean(
                     geom=camera_geom,
                     image=(image / image_scale),
-                    picture_thresh=config_cleaning['picture_threshold_pe'],
-                    boundary_thresh=config_cleaning['boundary_threshold_pe'],
-                    keep_isolated_pixels=config_cleaning['keep_isolated_pixels'],
-                    min_number_picture_neighbors=config_cleaning['min_picture_neighbors']
+                    picture_thresh=config_dvr['picture_threshold_pe'],
+                    boundary_thresh=config_dvr['boundary_threshold_pe'],
+                    keep_isolated_pixels=config_dvr['keep_isolated_pixels'],
+                    min_number_picture_neighbors=config_dvr['min_picture_neighbors']
                 )
 
                 parameter_container = parameterize_image(
