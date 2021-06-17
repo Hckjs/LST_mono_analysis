@@ -35,7 +35,7 @@ disp:
         n_estimators=200,
         max_features='auto',
         n_jobs=-1,
-        max_depth=20,
+        max_depth=30,
     )
 
   sign_classifier: |
@@ -43,7 +43,7 @@ disp:
         n_estimators=200,
         max_features='sqrt',
         n_jobs=-1,
-        max_depth=20,
+        max_depth=30,
     )
 
   # Define the name of the variable you want estimate by regression.
@@ -52,11 +52,10 @@ disp:
   output_name: disp_prediction
 
   # randomly sample the data if you dont want to use the whole set
-  n_signal : 200000
+  n_signal : 300000
   features:
     - hillas_length
     - hillas_width
-    - hillas_r
     - hillas_skewness
     - hillas_kurtosis
     - hillas_intensity
@@ -81,11 +80,11 @@ energy:
       n_estimators=200,
       max_features='sqrt',
       n_jobs=-1,
-      max_depth=20,
+      max_depth=30,
     )
 
   # randomly sample the data if you dont want to use the whole set
-  n_signal: 200000
+  n_signal: 300000
 
 
   # Define the name of the variable you want estimate by regression.
@@ -97,9 +96,9 @@ energy:
     - hillas_length
     - hillas_length_uncertainty
     - hillas_width
+    - hillas_skewness
     - concentration_core
     - concentration_cog
-    - hillas_skewness
     - leakage_intensity_width_1
     - leakage_intensity_width_2
     - intensity_max
@@ -125,13 +124,13 @@ separator:
         n_estimators=200,
         max_features='sqrt',
         n_jobs=-1,
-        max_depth=20,
+        max_depth=30,
         criterion='entropy',
     )
 
   # randomly sample the data if you dont want to use the whole set
-  n_background: 200000
-  n_signal: 200000
+  n_background: 300000
+  n_signal: 300000
 
   # Define the name of the variable you want estimate by regression.
   # This the name of the group containing the predictions aswell as the column name in the CTA case
@@ -178,7 +177,7 @@ dxdy:
   output_name: dxdy_prediction
 
   # randomly sample the data if you dont want to use the whole set
-  n_signal : 200000
+  n_signal : 300000
   features:
     - hillas_x
     - hillas_y
