@@ -20,7 +20,7 @@ telescopes:
 selection:
     - hillas_intensity:
       - '>='  # needs to be in quotes because > and ! are special character in yaml
-      - 100
+      - 300
     - leakage_intensity_width_1:
       - <
       - 0.2
@@ -35,7 +35,7 @@ disp:
         n_estimators=200,
         max_features='auto',
         n_jobs=-1,
-        max_depth=30,
+        max_depth=20,
     )
 
   sign_classifier: |
@@ -43,7 +43,7 @@ disp:
         n_estimators=200,
         max_features='sqrt',
         n_jobs=-1,
-        max_depth=30,
+        max_depth=20,
     )
 
   # Define the name of the variable you want estimate by regression.
@@ -80,7 +80,7 @@ energy:
       n_estimators=200,
       max_features='sqrt',
       n_jobs=-1,
-      max_depth=30,
+      max_depth=20,
     )
 
   # randomly sample the data if you dont want to use the whole set
@@ -124,7 +124,7 @@ separator:
         n_estimators=200,
         max_features='sqrt',
         n_jobs=-1,
-        max_depth=30,
+        max_depth=20,
         criterion='entropy',
     )
 

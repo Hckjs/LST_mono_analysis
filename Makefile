@@ -1,7 +1,7 @@
 OUTDIR = /fefs/aswg/workspace/jonas.hackfeld/build
 PLOTS = plots
 
-OBSDIR = /fefs/aswg/workspace/jonas.hackfeld/masterarbeit/obs/crab/20201121/tailcuts_8_4
+OBSDIR = /fefs/aswg/workspace/jonas.hackfeld/masterarbeit/obs/crab/20201121/tailcuts_10_5
 SIMDIR = /fefs/aswg/workspace/jonas.hackfeld/masterarbeit/mc/ctapipe/merged_all
 
 
@@ -16,8 +16,8 @@ ELECTRON_FILE = electron_trans80_tc_8_4
 
 CRAB_RUNS=2988 2989 2990 2991 2992
 
-CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_LST-1.Run0, $(CRAB_RUNS)))
-CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_LST-1.Run0, $(CRAB_RUNS)))
+CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_tc_10_5_LST-1.Run0, $(CRAB_RUNS)))
+CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_tc_10_5_ped_LST-1.Run0, $(CRAB_RUNS)))
 
 
 all: $(OUTDIR)/cv_separation.h5 \

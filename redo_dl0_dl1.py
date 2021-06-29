@@ -44,8 +44,8 @@ DEFAULT_PEAKTIME_STATISTICS = PeakTimeStatisticsContainer()
 #Config
 config_dvr={
     'volume_reducer':'ptdvr',
-    'picture_threshold_pe':10.0,
-    'boundary_threshold_pe':5.0,
+    'picture_threshold_pe':8.0,
+    'boundary_threshold_pe':4.0,
     'min_picture_neighbors':1,
     'keep_isolated_pixels':False,
     'n_end_dilates':1,
@@ -54,8 +54,8 @@ config_dvr={
 }
 
 config_cleaning={
-    'picture_threshold_pe':10.0,
-    'boundary_threshold_pe':5.0,
+    'picture_threshold_pe':8.0,
+    'boundary_threshold_pe':4.0,
     'min_picture_neighbors':1,
     'keep_isolated_pixels':False
 }
