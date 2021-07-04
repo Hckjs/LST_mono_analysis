@@ -1,12 +1,18 @@
 OUTDIR = build
 
 OBSDIR = /home/jonas/aktuell/workb/dvr_test/data/crab/DL1/ctapipe
+#SIMDIR = /home/jonas/aktuell/workb/dvr_test/data/mc/prod5/ctapipe
+#trans_80
 SIMDIR = /home/jonas/Leben/Studium/Masterarbeit/data/mc/ctapipe/rf
 
+#SIM_VERSION= cta-prod5-paranal_desert-2147m-Paranal-dark_merged
 
-AICT_CONFIG = config/cta_full_config.yaml
+#GAMMA_FILE = gamma_20deg_0deg___$(SIM_VERSION)
+#GAMMA_DIFFUSE_FILE = gamma_diffuse_20deg_0deg___$(SIM_VERSION)
+#PROTON_FILE = proton_20deg_0deg___$(SIM_VERSION)
+#ELECTRON_FILE = electron_20deg_0deg___$(SIM_VERSION)
 
-
+#trans_80
 GAMMA_FILE = gamma_trans80_tc_8_4
 GAMMA_DIFFUSE_FILE = gamma_diffuse_trans80_tc_8_4
 PROTON_FILE = proton_trans80_tc_8_4
@@ -16,8 +22,9 @@ ELECTRON_FILE = electron_trans80_tc_8_4
 CRAB_RUNS=2992
 
 CRAB_DL2=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_LST-1.Run0, $(CRAB_RUNS)))
-CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_LST-1.Run0, $(CRAB_RUNS)))
+#CRAB_DL2_DVR=$(addsuffix .h5, $(addprefix $(OUTDIR)/dl2_dvr_LST-1.Run0, $(CRAB_RUNS)))
 
+AICT_CONFIG = config/cta_full_config.yaml
 
 
 all: $(OUTDIR)/cv_separation.h5 \
@@ -26,15 +33,13 @@ all: $(OUTDIR)/cv_separation.h5 \
 	$(OUTDIR)/regressor_plots.pdf \
 	$(OUTDIR)/disp_plots.pdf \
 	$(OUTDIR)/separator_plots.pdf \
-	$(CRAB_DL2_DVR) \
 	$(CRAB_DL2) \
 	$(OUTDIR)/dl2_$(GAMMA_FILE)_testing.h5 \
 	$(OUTDIR)/dl2_$(GAMMA_DIFFUSE_FILE)_testing.h5 \
 	$(OUTDIR)/dl2_$(PROTON_FILE)_testing.h5 \
 	$(OUTDIR)/dl2_$(ELECTRON_FILE)_testing.h5 \
 	$(OUTDIR)/pyirf.fits.gz \
-	$(OUTDIR)/crab_theta2.pdf \
-	$(OUTDIR)/crab_theta2_dvr.pdf
+	$(OUTDIR)/crab_theta2.pdf
 
 #precuts
 $(OUTDIR)/%_precuts.h5: $(SIMDIR)/%.h5 $(AICT_CONFIG) | $(OUTDIR)

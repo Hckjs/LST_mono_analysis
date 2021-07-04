@@ -134,7 +134,12 @@ def read_file(infile):
         spectral_index=table_sim_run["spectral_index"][0],
         viewcone=u.Quantity(table_sim_run["max_viewcone_radius"][0] - table_sim_run["min_viewcone_radius"][0], u.deg),
     )
-    return table.QTable.from_pandas(df, units=UNIT_MAP), sim_info
+
+    nans = np.where(np.isnan(df['reco_energy'].values))[0].tolist()
+    df_dropped = df.drop(nans)
+    df_reindexed = df_dropped.reset_index()
+
+    return table.QTable.from_pandas(df_reindexed, units=UNIT_MAP), sim_info
 
 
 @click.command()

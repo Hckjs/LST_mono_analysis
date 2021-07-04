@@ -52,17 +52,27 @@ disp:
   output_name: disp_prediction
 
   # randomly sample the data if you dont want to use the whole set
-  n_signal : 300000
+  n_signal : 150000
   features:
     - hillas_length
     - hillas_width
-    - hillas_r
     - hillas_skewness
     - hillas_kurtosis
     - hillas_intensity
+    - hillas_psi
+    - hillas_phi
+    - hillas_r
+    - leakage_intensity_width_1
+    - leakage_intensity_width_2
+    - leakage_pixels_width_1
+    - leakage_pixels_width_2
     - timing_slope
     - timing_intercept
     - timing_deviation
+    - concentration_cog
+    - concentration_core
+    - morphology_num_islands
+    - morphology_num_pixels
 
   feature_generation:
     needed_columns:
@@ -85,7 +95,7 @@ energy:
     )
 
   # randomly sample the data if you dont want to use the whole set
-  n_signal: 300000
+  n_signal: 150000
 
 
   # Define the name of the variable you want estimate by regression.
@@ -93,18 +103,25 @@ energy:
   output_name: gamma_energy_prediction
 
   features:
-    - hillas_intensity
     - hillas_length
-    - hillas_length_uncertainty
     - hillas_width
-    - concentration_core
-    - concentration_cog
     - hillas_skewness
+    - hillas_kurtosis
+    - hillas_intensity
+    - hillas_psi
+    - hillas_phi
+    - hillas_r
     - leakage_intensity_width_1
     - leakage_intensity_width_2
-    - intensity_max
-    - intensity_mean
-    - intensity_std
+    - leakage_pixels_width_1
+    - leakage_pixels_width_2
+    - timing_slope
+    - timing_intercept
+    - timing_deviation
+    - concentration_cog
+    - concentration_core
+    - morphology_num_islands
+    - morphology_num_pixels
 
   feature_generation:
     needed_columns:
@@ -130,27 +147,33 @@ separator:
     )
 
   # randomly sample the data if you dont want to use the whole set
-  n_background: 300000
-  n_signal: 300000
+  n_background: 150000
+  n_signal: 150000
 
   # Define the name of the variable you want estimate by regression.
   # This the name of the group containing the predictions aswell as the column name in the CTA case
   output_name: gamma_prediction
 
   features:
-    - hillas_intensity
     - hillas_length
     - hillas_width
-    - hillas_width_uncertainty
-    - hillas_kurtosis
     - hillas_skewness
-    - timing_deviation
+    - hillas_kurtosis
+    - hillas_intensity
+    - hillas_psi
+    - hillas_phi
+    - hillas_r
+    - leakage_intensity_width_1
+    - leakage_intensity_width_2
+    - leakage_pixels_width_1
+    - leakage_pixels_width_2
     - timing_slope
     - timing_intercept
+    - timing_deviation
     - concentration_cog
     - concentration_core
+    - morphology_num_islands
     - morphology_num_pixels
-    - intensity_std
 
   feature_generation:
     needed_columns:

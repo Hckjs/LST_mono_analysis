@@ -77,6 +77,11 @@ def read_run_calculate_thetas(run, threshold, source: SkyCoord, n_offs):
     for col in columns:
         df[col.name] = col
 
+    #drop nans
+    nans = np.where(np.isnan(df['alt_prediction'].values))[0].tolist()
+    df = df.drop(nans)
+    df = df.reset_index()
+
     t = Time(df.time, format='mjd', scale='tai')
     t.format = 'unix'
     ontime = calc_ontime(t.value).to(u.hour)
