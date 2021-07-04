@@ -11,19 +11,20 @@ import glob
 
 
 def main():
-    obs_paths = glob.glob('/fefs/aswg/workspace/jonas.hackfeld/masterarbeit/obs/crab/20201121/tailcuts_8_4/dl1_dvr_LST-1.Run029*.h5')
+    obs_paths = glob.glob('/fefs/aswg/workspace/jonas.hackfeld/masterarbeit/obs/crab/20201121/tailcuts_10_5/dl1_dvr_tc_10_5_ped_LST-1.Run029*.h5')
 
     num_islands_all = np.array([])
     for path in obs_paths:
+        print(path)
         with tb.open_file(path, mode='r') as file:
             para_table = file.root['/dl1/event/telescope/parameters/tel_001']
             ni = para_table.cols.morphology_num_islands[:]
             num_islands = ni[ni != -1]
-            num_islands_all = np.concatenate(num_islands_all, num_islands)
+            num_islands_all = np.concatenate((num_islands_all, num_islands))
 
     df = pd.DataFrame()
     df['num_islands'] = num_islands_all
-    df.to_hdf('/fefs/aswg/workspace/jonas.hackfeld/masterarbeit/obs/crab/20201121/tailcuts_8_4/num_islands/num_islands.h5', key='num_i', mode='w')
+    df.to_hdf('/fefs/aswg/workspace/jonas.hackfeld/masterarbeit/obs/crab/20201121/tailcuts_8_4/num_islands/num_islands_ped.h5', key='num_i', mode='w')
 
 if __name__ == "__main__":
     main()
