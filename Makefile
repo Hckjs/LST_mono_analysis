@@ -155,7 +155,7 @@ $(PLOTS)/crab_theta2.pdf: theta2_wobble.py plotting.py calculation.py $(OUTDIR)/
 		'Crab' \
 		$(OUTDIR)/pyirf.fits.gz \
 		0.04 \
-		0.60
+		0.80
 
 $(PLOTS)/crab_theta2_dvr.pdf: theta2_wobble.py plotting.py calculation.py $(OUTDIR)/pyirf.fits.gz $(CRAB_DL2_DVR) | $(OUTDIR)
 	python theta2_wobble.py \
@@ -164,7 +164,7 @@ $(PLOTS)/crab_theta2_dvr.pdf: theta2_wobble.py plotting.py calculation.py $(OUTD
 		'Crab' \
 		$(OUTDIR)/pyirf.fits.gz \
 		0.04 \
-		0.60
+		0.80
 
 #pyirf sensitivity 
 $(OUTDIR)/pyirf.fits.gz: pyirf_sensitivity.py $(OUTDIR)/dl2_$(GAMMA_FILE)_testing.h5 $(OUTDIR)/dl2_$(PROTON_FILE)_testing.h5 $(OUTDIR)/dl2_$(ELECTRON_FILE)_testing.h5 | $(OUTDIR)

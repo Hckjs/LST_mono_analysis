@@ -20,7 +20,7 @@ telescopes:
 selection:
     - hillas_intensity:
       - '>='  # needs to be in quotes because > and ! are special character in yaml
-      - 300
+      - 50
     - leakage_intensity_width_1:
       - <
       - 0.2
@@ -61,7 +61,11 @@ disp:
     - hillas_intensity
     - timing_slope
     - timing_intercept
-    - timing_deviation
+    - hillas_length_uncertainty
+    - concentration_cog
+    - intensity_mean
+    - intensity_std
+    - peak_time_std
 
   feature_generation:
     needed_columns:
@@ -92,18 +96,25 @@ energy:
   output_name: gamma_energy_prediction
 
   features:
-    - hillas_intensity
     - hillas_length
-    - hillas_length_uncertainty
     - hillas_width
+    - hillas_r
     - hillas_skewness
-    - concentration_core
-    - concentration_cog
+    - hillas_kurtosis
+    - hillas_intensity
+    - timing_slope
+    - timing_intercept
+    - timing_deviation
+    - hillas_length_uncertainty
     - leakage_intensity_width_1
     - leakage_intensity_width_2
-    - intensity_max
+    - leakage_pixels_width_1
+    - leakage_pixels_width_2
+    - concentration_cog
+    - concentration_core
+    - morphology_num_pixels
+    - morphology_num_islands
     - intensity_mean
-    - intensity_std
 
   feature_generation:
     needed_columns:
@@ -137,19 +148,18 @@ separator:
   output_name: gamma_prediction
 
   features:
-    - hillas_intensity
     - hillas_length
     - hillas_width
-    - hillas_width_uncertainty
-    - hillas_kurtosis
-    - hillas_skewness
-    - timing_deviation
+    - hillas_intensity
     - timing_slope
     - timing_intercept
+    - timing_deviation
+    - hillas_length_uncertainty
+    - hillas_width_uncertainty
     - concentration_cog
     - concentration_core
-    - morphology_num_pixels
-    - intensity_std
+    - morphology_num_islands
+    - peak_time_std
 
   feature_generation:
     needed_columns:
@@ -177,7 +187,7 @@ dxdy:
   output_name: dxdy_prediction
 
   # randomly sample the data if you dont want to use the whole set
-  n_signal : 300000
+  n_signal : 200000
   features:
     - hillas_x
     - hillas_y
